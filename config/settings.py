@@ -1,13 +1,17 @@
 from pydantic import BaseModel, field_validator
 import yaml
 from pathlib import Path
+from os import makedirs
 
 # 定数
 sync_dir_ext = '._fxcc_sync'
 root_dir_ext = '._fxcc_root'
-cache_dir = Path("cache")
-local_dump_filename = cache_dir / f"local{root_dir_ext}"
-remote_dump_filename = cache_dir / f"remote{root_dir_ext}"
+cache_dir: Path = Path("cache")
+if not cache_dir.exists():
+    makedirs(cache_dir, exist_ok=True)
+local_dump_filename: Path = cache_dir / f"local{root_dir_ext}"
+remote_dump_filename: Path = cache_dir / f"remote{root_dir_ext}"
+console_refresh_interval_sec: int = 15
 
 # ユーザー設定
 class Preferences(BaseModel):
