@@ -4,6 +4,7 @@ from core.copy import LocalRootDirectory, RemoteRootDirectory
 from config import settings
 from config.settings import preferences
 from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import datetime
 
 
 local: LocalRootDirectory
@@ -27,7 +28,7 @@ def watch():
 
 def get_scheduler() -> BackgroundScheduler:
     scheduler: BackgroundScheduler = BackgroundScheduler()
-    scheduler.add_job(func=watch, trigger="interval", seconds=60)
+    scheduler.add_job(func=watch, trigger="interval", seconds=60, next_run_time=datetime.now())
     return scheduler
 
 
