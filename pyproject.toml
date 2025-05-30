@@ -12,4 +12,5 @@ dependencies = [
     "python-ulid>=3.0.0",
     "pyyaml>=6.0.2",
     "win11toast>=0.35",
+    "wxpython>=4.2.3",
 ]

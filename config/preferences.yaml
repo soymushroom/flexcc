@@ -1,7 +1,0 @@
-!Preferences
-LocalDirectory: "C:\\Users\\hchub\\Pictures\\camera"
-RemoteDirectory: "Z:\\pictures\\camera"
-SyncFreqMinutes: 5
-HoldAfterCreatedDays: 32
-HoldAfterModifiedDays: 9
-ServerPort: 28541
