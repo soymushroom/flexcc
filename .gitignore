@@ -11,3 +11,6 @@ wheels/
 
 # Cache directory
 cache/
+
+# preference file
+config/preferences.yaml

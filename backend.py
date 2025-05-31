@@ -1,22 +1,18 @@
 from pathlib import Path
-import yaml
-from core.copy import LocalRootDirectory, RemoteRootDirectory
+from core.dirsync import LocalRootDirectory, RemoteRootDirectory
 from config import settings
 from config.settings import preferences
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
 
 
-local: LocalRootDirectory
-remote: RemoteRootDirectory
-def init():
-    global local
-    global remote
-    local = LocalRootDirectory(path_=preferences.LocalDirectory)
-    remote = RemoteRootDirectory(path_=preferences.RemoteDirectory)
-
+scheduler: BackgroundScheduler = BackgroundScheduler()
 
 def watch():
+    if not settings.has_root_dirs():
+        return
+    local = LocalRootDirectory(path_=preferences.LocalDirectory)
+    remote = RemoteRootDirectory(path_=preferences.RemoteDirectory)
     print('Local:')
     local.check()
     print('\nRemote:')
@@ -26,10 +22,10 @@ def watch():
     print('Completed')
 
 
-def get_scheduler() -> BackgroundScheduler:
-    scheduler: BackgroundScheduler = BackgroundScheduler()
-    scheduler.add_job(func=watch, trigger="interval", seconds=60, next_run_time=datetime.now())
+def create_scheduler() -> BackgroundScheduler:
+    scheduler.add_job(func=watch, trigger="interval", seconds=preferences.SyncFreqMinutes*60, next_run_time=datetime.now(), id="watch_sync")
     return scheduler
 
 
-init()
+def start_scheduler():
+    scheduler.start()

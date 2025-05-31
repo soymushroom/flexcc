@@ -13,6 +13,7 @@ import ctypes
 from win11toast import toast
 import io
 from contextlib import redirect_stdout
+import core.dirsync as dirsync
 
 from config import settings
 from config.settings import Preferences
@@ -81,7 +82,7 @@ class RootDirectory(BaseModel, ABC):
     ローカルまたはリモートフォルダの状態を保持するクラス
     """
 
-    path_: Path
+    path_: Path | None
     sync_directories: list[SyncDirectory] = []
 
 
