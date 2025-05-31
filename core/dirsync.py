@@ -56,6 +56,14 @@ class SyncDirectory(BaseModel):
 
     def unlock(self):
         self.locked = False
+    
+
+    def remove(self):
+        shutil.rmtree(self.path_)
+    
+
+    def download(self, root_local: LocalRootDirectory):
+        shutil.copy(self.path_, root_local.path_ / self.path_)
 
     
     @classmethod
@@ -114,18 +122,19 @@ class LocalRootDirectory(RootDirectory):
         return super().dump(settings.local_dump_filename)
     
 
-    def sync(self, remote: RemoteRootDirectory):
+    def sync(self, remote_root: RemoteRootDirectory):
         now = datetime.now()
         # フォルダのリネーム
         local_dir_dict: dict[str, SyncDirectory] = {d.id_: d for d in self.sync_directories}
-        remote_dir_dict: dict[str, SyncDirectory] = {d.id_: d for d in remote.sync_directories}
+        remote_dir_dict: dict[str, SyncDirectory] = {d.id_: d for d in remote_root.sync_directories}
         # ローカルとリモートのペアを作成
         local_dir: SyncDirectory
         for local_dir in self.sync_directories:
             if local_dir.id_ not in remote_dir_dict.keys():
                 # 対応するリモートなし→新規作成
                 try:
-                    remote_dir = SyncDirectory.create(remote.path_ / local_dir.path_.stem, local_dir.id_)
+                    remote_dir = SyncDirectory.create(remote_root.path_ / local_dir.path_.stem, local_dir.id_)
+                    remote_root.sync_directories.append(remote_dir)
                 except FileExistsError as e:
                     buffer = io.StringIO()
                     with redirect_stdout(buffer):
@@ -193,7 +202,7 @@ class LocalRootDirectory(RootDirectory):
             print(f'created: {local_dir.created_days_ago} days ago')
             print(f'modified: {local_dir.fixed_days_ago} days ago')
         self.dump()
-        remote.dump()
+        remote_root.dump()
 
 
 class RemoteRootDirectory(RootDirectory):
