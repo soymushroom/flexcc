@@ -1,7 +1,7 @@
 from __future__ import annotations
 from pydantic import BaseModel, field_validator
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 import ulid
 from pathlib import Path
 from glob import glob
@@ -13,10 +13,10 @@ import ctypes
 from win11toast import toast
 import io
 from contextlib import redirect_stdout
-import core.dirsync as dirsync
+import copy
 
 from config import settings
-from config.settings import Preferences
+from config.settings import preferences
 
 
 class SyncDirectory(BaseModel):
@@ -33,11 +33,18 @@ class SyncDirectory(BaseModel):
     locked: bool = False
     @property
     def fixed_days_ago(self) -> int:
-        return (self.recent_sync - self.recent_modified).days
+        sync_date = datetime.combine(self.recent_sync.date(), time.min)
+        modified_date = datetime.combine(self.recent_modified.date(), time.min)
+        return (sync_date - modified_date).days
     @property
     def created_days_ago(self) -> int:
-        return (self.recent_sync - self.created_at).days
-    
+        sync_date = datetime.combine(self.recent_sync.date(), time.min)
+        created_date = datetime.combine(self.created_at.date(), time.min)
+        return (sync_date - created_date).days
+
+
+    def copy(self):
+        return copy.copy(self)
 
     def dump(self) -> str:
         filename = self.path_ / settings.sync_dir_ext
@@ -49,13 +56,82 @@ class SyncDirectory(BaseModel):
         # 書き込み
         filename.write_text(yaml.dump(self, allow_unicode=True), encoding='utf8')
 
+    def sync_directories(self, dst: SyncDirectory):
+        now = datetime.now()
+        logs: list[str] = []
+        if dst.locked:
+            # ロックされているフォルダなら中断
+            print(f'\nLocked Remote: {dst.path_.stem}\nSync skipped')
+            return
+        if dst.path_.stem != self.path_.stem:
+            # ローカルに合わせてリモートフォルダをリネーム
+            new_dst_path = dst.path_.parent / self.path_.stem
+            os.rename(dst.path_, new_dst_path)
+            log = f'Rename remote: \n{dst.path_} \n > {new_dst_path}'
+            dst.path_ = new_dst_path
+            print(f'\n{log}')
+            logs.append(log)
+            self.recent_modified = now
+        # 同期確認
+        self.recent_sync = now
+        command: list = [
+            "robocopy",
+            self.path_,
+            dst.path_,
+            "/MIR",   # ミラーリング
+            "/L",     # 実行せずに出力だけ
+            "/NP",    # 進行状況バー非表示
+            "/NDL",   # ディレクトリ一覧非表示
+            "/NS",    # ファイルサイズを表示しない
+            # "/NC",    # クラス（例：新規ファイルなど）を表示しない
+            "/NJH",   # ジョブヘッダを表示しない（開始時の情報）
+            "/NJS",   # ジョブサマリを表示しない（統計情報）
+        ]
+        print(f'\nSync: {self.path_.stem}')
+        result = subprocess.run(command, capture_output=True, text=True, shell=True)
+        if result.returncode > 7:
+            print('エラー発生')
+        elif result.returncode == 0:
+            print('変更なし')
+        elif result.returncode:
+            # ミラーリング実行
+            copy_command = [c for c in command if c != '/L']
+            result = subprocess.run(copy_command, capture_output=True, text=True, shell=True)
+            log = result.stdout[1:-1].replace(' ', '').replace('\t', ' ')
+            print(log)
+            # 結果更新
+            logs.append(f'Sync: {self.path_.stem}\n{log}')
+            self.recent_modified = now
+        # 同期ログ出力
+        if logs:
+            self.modify_log = '\n\n'.join(logs)
+        self.dump()
+        shutil.copy2(self.path_ / settings.sync_dir_ext, dst.path_ / settings.sync_dir_ext)
+        sync_remote = SyncDirectory.create(dst.path_)
+        # 削除チェック
+        print(f'created: {self.created_days_ago} days ago')
+        print(f'modified: {self.fixed_days_ago} days ago')
+        if (
+            self.created_days_ago > preferences.HoldAfterCreatedDays  # フォルダ作成後保持期限超過
+            and self.fixed_days_ago > preferences.HoldAfterModifiedDays  # フォルダ更新後保持期限超過
+        ):
+            # リモートをロックして削除
+            sync_remote.locked = True
+            sync_remote.dump()
+            self.remove()
+        return sync_remote
     
     def lock(self):
         self.locked = True
-    
 
     def unlock(self):
         self.locked = False
+
+    def remove(self):
+        shutil.rmtree(self.path_)
+    
+    def download(self, root_local: LocalRootDirectory):
+        shutil.copy(self.path_, root_local.path_ / self.path_)
 
     
     @classmethod
@@ -114,18 +190,18 @@ class LocalRootDirectory(RootDirectory):
         return super().dump(settings.local_dump_filename)
     
 
-    def sync(self, remote: RemoteRootDirectory):
-        now = datetime.now()
+    def sync(self, remote_root: RemoteRootDirectory):
         # フォルダのリネーム
         local_dir_dict: dict[str, SyncDirectory] = {d.id_: d for d in self.sync_directories}
-        remote_dir_dict: dict[str, SyncDirectory] = {d.id_: d for d in remote.sync_directories}
+        remote_dir_dict: dict[str, SyncDirectory] = {d.id_: d for d in remote_root.sync_directories}
         # ローカルとリモートのペアを作成
         local_dir: SyncDirectory
         for local_dir in self.sync_directories:
             if local_dir.id_ not in remote_dir_dict.keys():
                 # 対応するリモートなし→新規作成
                 try:
-                    remote_dir = SyncDirectory.create(remote.path_ / local_dir.path_.stem, local_dir.id_)
+                    remote_dir = SyncDirectory.create(remote_root.path_ / local_dir.path_.stem, local_dir.id_)
+                    remote_root.sync_directories.append(remote_dir)
                 except FileExistsError as e:
                     buffer = io.StringIO()
                     with redirect_stdout(buffer):
@@ -138,62 +214,16 @@ class LocalRootDirectory(RootDirectory):
                 remote_dir_dict[remote_dir.id_] = remote_dir
         print('\n'.join([f'{local_dir.path_.stem} - {remote_dir_dict[id_].path_.stem}' for id_, local_dir in local_dir_dict.items()]))
         # 同期開始
-        for local_dir in self.sync_directories:
-            logs: list[str] = []
+        for local_dir in self.sync_directories.copy():
             remote_dir = remote_dir_dict[local_dir.id_]
-            if remote_dir.locked:
-                # ロックされているフォルダなら中断
-                print(f'\nLocked Remote: {remote_dir.path_.stem}\nSync skipped')
-                continue
-            if remote_dir.path_.stem != local_dir.path_.stem:
-                # ローカルに合わせてリモートフォルダをリネーム
-                new_remote_path = remote_dir.path_.parent / local_dir.path_.stem
-                os.rename(remote_dir.path_, new_remote_path)
-                log = f'Rename remote: \n{remote_dir.path_} \n > {new_remote_path}'
-                remote_dir.path_ = new_remote_path
-                print(f'\n{log}')
-                logs.append(log)
-                local_dir.recent_modified = now
-            # 同期確認
-            local_dir.recent_sync = now
-            command: list = [
-                "robocopy",
-                local_dir.path_,
-                remote_dir.path_,
-                "/MIR",   # ミラーリング
-                "/L",     # 実行せずに出力だけ
-                "/NP",    # 進行状況バー非表示
-                "/NDL",   # ディレクトリ一覧非表示
-                "/NS",    # ファイルサイズを表示しない
-                # "/NC",    # クラス（例：新規ファイルなど）を表示しない
-                "/NJH",   # ジョブヘッダを表示しない（開始時の情報）
-                "/NJS",   # ジョブサマリを表示しない（統計情報）
-            ]
-            print(f'\nSync: {local_dir.path_.stem}')
-            result = subprocess.run(command, capture_output=True, text=True, shell=True)
-            if result.returncode > 7:
-                print('エラー発生')
-            elif result.returncode == 0:
-                print('変更なし')
-            elif result.returncode:
-                # ミラーリング実行
-                copy_command = [c for c in command if c != '/L']
-                result = subprocess.run(copy_command, capture_output=True, text=True, shell=True)
-                log = result.stdout[1:-1].replace(' ', '').replace('\t', ' ')
-                print(log)
-                # 結果更新
-                logs.append(f'Sync: {local_dir.path_.stem}\n{log}')
-                local_dir.recent_modified = now
-            # 同期ログ出力
-            if logs:
-                local_dir.modify_log = '\n\n'.join(logs)
-            local_dir.dump()
-            shutil.copy2(local_dir.path_ / settings.sync_dir_ext, remote_dir.path_ / settings.sync_dir_ext)
+            local_dir.locked = False
+            remote_dir = local_dir.sync_directories(remote_dir)
             # 削除チェック
-            print(f'created: {local_dir.created_days_ago} days ago')
-            print(f'modified: {local_dir.fixed_days_ago} days ago')
+            if not local_dir.path_.exists():
+                self.sync_directories = [dir_ for dir_ in self.sync_directories if dir_ != local_dir]
+                remote_root.sync_directories = [remote_dir if dir_.id_ == remote_dir.id_ else dir_ for dir_ in remote_root.sync_directories]
         self.dump()
-        remote.dump()
+        remote_root.dump()
 
 
 class RemoteRootDirectory(RootDirectory):

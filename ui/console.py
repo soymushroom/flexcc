@@ -6,6 +6,8 @@ from typing import Literal
 from pathlib import Path
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
+from datetime import datetime
+import os
 
 from config import settings
 from config.settings import preferences
@@ -33,6 +35,12 @@ def change_directory_settings(dir: str, dir_type: Literal["local", "remote"]):
     if settings.has_root_dirs():
         watch()
 
+# マニュアル同期
+def manual_sync():
+    if settings.has_root_dirs():
+        watch()
+    return datetime.now()
+
 # 数値設定を反映
 def change_numerical_settings(sync_every: int, hold_after_created: int, hold_after_modified: int, port: int):
     if sync_every != preferences.SyncFreqMinutes:
@@ -53,44 +61,85 @@ def change_numerical_settings(sync_every: int, hold_after_created: int, hold_aft
     gr.Info("Setting changed.")
 
 # 絵文字取得
-def get_icon_emojis(rocal: bool, remote: bool, locked: bool):
+def get_icon_emojis(sync_rocal: SyncDirectory, sync_remote: SyncDirectory):
     # 🔒🔓🔄️▶️⏸️⏹️☁️📁
     icon_text = "📁\n☁️\n🔒"
-    if not rocal: 
+    if sync_rocal is None: 
         icon_text = icon_text.replace("📁", "　")
-    if not remote:
+    if sync_remote is None:
         icon_text = icon_text.replace("☁️", "　")
-    if not locked:
+    if sync_remote is None or not sync_remote.locked:
         icon_text = icon_text.replace("🔒", "　")
     return icon_text
 
 # リモートフォルダのロック
-def lock_remote(sync_local: LocalRootDirectory, sync_remote: SyncDirectory, root_remote: RemoteRootDirectory):
+def lock_remote(sync_local: SyncDirectory, sync_remote: SyncDirectory, root_remote: RemoteRootDirectory):
     sync_remote.lock()
     sync_remote.dump()
     root_remote.sync_directories = [sync_remote if sync_remote.id_ == dir_.id_ else dir_ for dir_ in root_remote.sync_directories]
     root_remote.dump()
     return (
-        gr.update(value=get_icon_emojis(sync_local, sync_remote, True)),
+        gr.update(value=get_icon_emojis(sync_local, sync_remote)),
         gr.update(interactive=False), 
         gr.update(interactive=True), 
-        gr.update(interactive=True), 
-        gr.update(interactive=True), 
+        gr.update(interactive=sync_local), 
+        gr.update(interactive=not sync_local), 
     )
 
 # リモートフォルダのアンロック
-def unlock_remote(sync_local: LocalRootDirectory, sync_remote: SyncDirectory, root_remote: RemoteRootDirectory):
+def unlock_remote(sync_local: SyncDirectory, sync_remote: SyncDirectory, root_remote: RemoteRootDirectory):
     sync_remote.unlock()
     sync_remote.dump()
     root_remote.sync_directories = [sync_remote if sync_remote.id_ == dir_.id_ else dir_ for dir_ in root_remote.sync_directories]
     root_remote.dump()
     return (
-        gr.update(value=get_icon_emojis(sync_local, sync_remote, False)),
+        gr.update(value=get_icon_emojis(sync_local, sync_remote)),
         gr.update(interactive=True), 
         gr.update(interactive=False), 
         gr.update(interactive=False), 
         gr.update(interactive=False), 
     )
+
+# ローカルフォルダの削除
+def remove_local_dir(sync_local: SyncDirectory, sync_remote: SyncDirectory, root_local: LocalRootDirectory):
+    if not sync_remote.locked:
+        raise gr.Error("Remote folder is not locked.")
+    sync_local.remove()
+    root_local.sync_directories = [dir_ for dir_ in root_local.sync_directories if dir_.id_ != sync_local.id_]
+    root_local.dump()
+    return (
+        get_icon_emojis(None, sync_remote),
+        gr.update(interactive=False), 
+        gr.update(interactive=True), 
+        gr.update(interactive=False), 
+        gr.update(interactive=True), 
+    ) 
+
+# リモートフォルダのダウンロード
+def download_remote_dir(sync_local: SyncDirectory, sync_remote: SyncDirectory, root_local: LocalRootDirectory):
+    if not sync_remote.locked:
+        raise gr.Error("Remote folder is not locked.")
+    if sync_local is not None:
+        raise gr.Error("Local folder already exists.")
+    # コピー先フォルダ生成
+    dst = root_local.path_ / sync_remote.path_.stem
+    os.makedirs(dst, exist_ok=True)
+    sync_local = SyncDirectory.create(dst, sync_remote.id_)
+    # 同期実行
+    sync_remote.sync_directories(sync_local)
+    # ローカルプロパティ更新
+    now = sync_remote.recent_sync
+    sync_local.recent_modified = now
+    sync_local.recent_sync = now
+    root_local.sync_directories.append(sync_local)
+    root_local.dump()
+    return (
+        get_icon_emojis(sync_local, sync_remote),
+        gr.update(interactive=False), 
+        gr.update(interactive=True), 
+        gr.update(interactive=True), 
+        gr.update(interactive=False), 
+    ) 
 
 # --- UI実装 ---
 
@@ -98,6 +147,7 @@ def unlock_remote(sync_local: LocalRootDirectory, sync_remote: SyncDirectory, ro
 def create_gradio_ui():
     css = (Path("ui") / "console_main.css").read_text(encoding="utf8")
     with gr.Blocks(css=css) as demo:
+        gr_state_on = gr.State(False)
         # 設定
         has_root_dirs = settings.has_root_dirs()
         with gr.Accordion("Preferences", open=not has_root_dirs) as gr_accordion_pref:
@@ -109,8 +159,8 @@ def create_gradio_ui():
                 gr_btn_open_remote: gr.Button = gr.Button("Open", elem_id="button")
             with gr.Row(equal_height=True):
                 gr_num_sync_freq_mins: gr.Number = gr.Number(preferences.SyncFreqMinutes, minimum=1, step=1, label="🔄️Sync Every [mins]", interactive=True)
-                gr_num_hold_after_created_days: gr.Number = gr.Number(preferences.HoldAfterCreatedDays, minimum=1, step=1, label="📄Remove Local After Created [days]", interactive=True)
-                gr_num_hold_after_modified_days: gr.Number = gr.Number(preferences.HoldAfterModifiedDays, minimum=1, step=1, label="📝Remove Local After Modified [days]", interactive=True)
+                gr_num_hold_after_created_days: gr.Number = gr.Number(preferences.HoldAfterCreatedDays, minimum=0, step=1, label="📄Remove Local After Created [days]", interactive=True)
+                gr_num_hold_after_modified_days: gr.Number = gr.Number(preferences.HoldAfterModifiedDays, minimum=0, step=1, label="📝Remove Local After Modified [days]", interactive=True)
                 gr_num_server_port: gr.Number = gr.Number(preferences.ServerPort, minimum=1, step=1, label="💻Console Server Port (from next launch)", interactive=True)
                 gr_btn_apply_settings: gr.Button = gr.Button("Apply", elem_id="button")
         gr_btn_open_local.click(select_directory, inputs=gr_text_local, outputs=gr_text_local)
@@ -123,11 +173,13 @@ def create_gradio_ui():
             gr_num_hold_after_modified_days,
             gr_num_server_port,
         ])
+        # 同期ボタン
+        gr_btn_sync = gr.Button("Sync Manually")
+        gr_btn_sync.click(manual_sync, outputs=gr_state_on)
         # フォルダビューワー
         container = gr.Column()
         gr_timer = gr.Timer(settings.console_refresh_interval_sec)
         gr_dummy = gr.State(False)
-        gr_state_on = gr.State(False)
 
         # フォルダ一覧の描画処理
         @gr.render(inputs=[gr_dummy], triggers=[gr_timer.tick, gr_state_on.change])
@@ -150,9 +202,9 @@ def create_gradio_ui():
                 ids[sync_dir.id_]["remote"] = sync_dir
             # フォルダ概要を表示
             rows = []
-            for k, v in ids.items():
-                sync_local: SyncDirectory = v["local"] if "local" in v.keys() else False
-                sync_remote: SyncDirectory = v["remote"] if "remote" in v.keys() else False
+            for k, v in sorted(ids.items(), reverse=True):
+                sync_local: SyncDirectory = v["local"] if "local" in v.keys() else None
+                sync_remote: SyncDirectory = v["remote"] if "remote" in v.keys() else None
                 gr_state_sync_local = gr.State(sync_local)
                 gr_state_sync_remote = gr.State(sync_remote)
                 with gr.Row(equal_height=True):
@@ -160,18 +212,24 @@ def create_gradio_ui():
                     gr_textbox_stem = gr.Textbox(name, label="Name", interactive=False, scale=4)
                     gr_textbox_id = gr.Textbox(k, label="ID", interactive=False, scale=3)
                     gr_textbox_recent_sync = gr.Textbox(sync_remote.recent_sync.strftime("%Y-%m-%d %H:%M:%S"), label="Recent Sync", interactive=False, scale=2)
-                    locked = sync_remote.locked if sync_remote else False
-                    gr_md_icon = gr.Markdown(get_icon_emojis(sync_local, sync_remote, locked), elem_id="icon")
+                    gr_md_icon = gr.Markdown(get_icon_emojis(sync_local, sync_remote), elem_id="icon")
                     with gr.Column() as lock_col:
                         with gr.Group():
                             gr_button_lock_remote = gr.Button("🔒Lock Remote", interactive=not sync_remote.locked)
                             gr_button_unlock_remote = gr.Button("🔓Unlock Remote", interactive=sync_remote.locked)
                     with gr.Column() as copy_col:
                         with gr.Group():
-                            gr_button_remove_local = gr.Button("🗑️Remove local", interactive=sync_remote.locked)
-                            gr_button_copy_to_local = gr.Button("📥Copy to local", interactive=sync_remote.locked)
+                            gr_button_remove_local = gr.Button("🗑️Remove local", interactive=(sync_remote.locked and sync_local is not None))
+                            gr_button_copy_to_local = gr.Button("📥Copy to local", interactive=(sync_remote.locked and sync_local is None))
                     rows.extend([gr_textbox_stem, gr_textbox_id, gr_textbox_recent_sync, gr_md_icon, lock_col, copy_col])
                     # ボタンクリックイベント登録
+                    dir_indicators = [
+                        gr_md_icon,
+                        gr_button_lock_remote, 
+                        gr_button_unlock_remote, 
+                        gr_button_remove_local, 
+                        gr_button_copy_to_local, 
+                    ]
                     gr_button_lock_remote.click(
                         lock_remote, 
                         inputs=[
@@ -179,13 +237,7 @@ def create_gradio_ui():
                             gr_state_sync_remote, 
                             gr_state_root_remote
                         ], 
-                        outputs=[
-                            gr_md_icon,
-                            gr_button_lock_remote, 
-                            gr_button_unlock_remote, 
-                            gr_button_remove_local, 
-                            gr_button_copy_to_local, 
-                        ],
+                        outputs=dir_indicators,
                         show_progress=False, 
                     )
                     gr_button_unlock_remote.click(
@@ -195,17 +247,29 @@ def create_gradio_ui():
                             gr_state_sync_remote, 
                             gr_state_root_remote
                         ], 
-                        outputs=[
-                            gr_md_icon,
-                            gr_button_lock_remote, 
-                            gr_button_unlock_remote, 
-                            gr_button_remove_local, 
-                            gr_button_copy_to_local, 
-                        ],
+                        outputs=dir_indicators,
                         show_progress=False, 
                     )
-                    gr_button_remove_local.click()
-                    gr_button_copy_to_local.click()
+                    gr_button_remove_local.click(
+                        remove_local_dir, 
+                        inputs=[
+                            gr_state_sync_local,
+                            gr_state_sync_remote, 
+                            gr_state_root_local, 
+                        ], 
+                        outputs=dir_indicators,
+                        show_progress=False, 
+                    )
+                    gr_button_copy_to_local.click(
+                        download_remote_dir, 
+                        inputs=[
+                            gr_state_sync_local,
+                            gr_state_sync_remote, 
+                            gr_state_root_local, 
+                        ], 
+                        outputs=dir_indicators,
+                        show_progress=False, 
+                    )
             return rows
 
         container.render = render_items(gr_dummy)
