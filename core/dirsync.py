@@ -109,8 +109,8 @@ class SyncDirectory(BaseModel):
         shutil.copy2(self.path_ / settings.sync_dir_ext, dst.path_ / settings.sync_dir_ext)
         sync_remote = SyncDirectory.create(dst.path_)
         # 削除チェック
-        print(f'created: {self.created_days_ago} days ago')
-        print(f'modified: {self.fixed_days_ago} days ago')
+        print(f'Created: {self.created_days_ago} days ago')
+        print(f'Modified: {self.fixed_days_ago} days ago')
         if (
             self.created_days_ago > preferences.HoldAfterCreatedDays  # フォルダ作成後保持期限超過
             and self.fixed_days_ago > preferences.HoldAfterModifiedDays  # フォルダ更新後保持期限超過
@@ -119,6 +119,7 @@ class SyncDirectory(BaseModel):
             sync_remote.locked = True
             sync_remote.dump()
             self.remove()
+            print(f"Delete local: {self.path_.stem}")
         return sync_remote
     
     def lock(self):
@@ -222,6 +223,11 @@ class LocalRootDirectory(RootDirectory):
             if not local_dir.path_.exists():
                 self.sync_directories = [dir_ for dir_ in self.sync_directories if dir_ != local_dir]
                 remote_root.sync_directories = [remote_dir if dir_.id_ == remote_dir.id_ else dir_ for dir_ in remote_root.sync_directories]
+            # 同期済みフォルダをリモート一覧から削除
+            del remote_dir_dict[local_dir.id_]
+        # ローカルから同期のなかったリモートをロック
+        for remote_dir in remote_dir_dict.values():
+            remote_dir.locked = True
         self.dump()
         remote_root.dump()
 
