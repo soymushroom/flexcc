@@ -24,11 +24,12 @@ def create_tray_icon():
         
 
     icon = Icon(
-        'test name',
+        'flexcc',
+        title='flexcc',
         icon=create_icon_image(),
         menu=Menu(
-            MenuItem('コンソールを開く', open_console),
-            MenuItem('終了', on_exit)
+            MenuItem('Open Console', open_console),
+            MenuItem('Quit', on_exit)
         )
     )
     return icon
