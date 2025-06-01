@@ -69,7 +69,7 @@ def get_icon_emojis(sync_rocal: SyncDirectory, sync_remote: SyncDirectory):
     if sync_remote is None:
         icon_text = icon_text.replace("☁️", "　")
     if sync_remote is None or not sync_remote.locked:
-        icon_text = icon_text.replace("🔒", "　")
+        icon_text = icon_text.replace("🔒", "🔄️")
     return icon_text
 
 # リモートフォルダのロック
@@ -128,9 +128,10 @@ def download_remote_dir(sync_local: SyncDirectory, sync_remote: SyncDirectory, r
     # 同期実行
     sync_remote.sync_directories(sync_local)
     # ローカルプロパティ更新
-    now = sync_remote.recent_sync
-    sync_local.recent_modified = now
-    sync_local.recent_sync = now
+    now = sync_remote.synced_at
+    sync_local.created_at = sync_remote.created_at
+    sync_local.modified_at = now
+    sync_local.synced_at = now
     root_local.sync_directories.append(sync_local)
     root_local.dump()
     return (
@@ -202,6 +203,8 @@ def create_gradio_ui():
                 ids[sync_dir.id_]["remote"] = sync_dir
             # フォルダ概要を表示
             rows = []
+            synced_at = max([x.synced_at for x in root_local.sync_directories])
+            gr.Markdown(f"Synced at: {synced_at:%Y-%m-%d %H:%M}")
             for k, v in sorted(ids.items(), reverse=True):
                 sync_local: SyncDirectory = v["local"] if "local" in v.keys() else None
                 sync_remote: SyncDirectory = v["remote"] if "remote" in v.keys() else None
@@ -210,8 +213,18 @@ def create_gradio_ui():
                 with gr.Row(equal_height=True):
                     name = sync_local.path_.stem if sync_local else sync_remote.path_.stem
                     gr_textbox_stem = gr.Textbox(name, label="Name", interactive=False, scale=4)
-                    gr_textbox_id = gr.Textbox(k, label="ID", interactive=False, scale=3)
-                    gr_textbox_recent_sync = gr.Textbox(sync_remote.recent_sync.strftime("%Y-%m-%d %H:%M:%S"), label="Recent Sync", interactive=False, scale=2)
+                    gr_textbox_created_at = gr.Textbox(
+                        sync_remote.created_at.strftime("%Y-%m-%d %H:%M"), 
+                        label="📄Created at", interactive=False, scale=1
+                    )
+                    gr_textbox_modified_at = gr.Textbox(
+                        sync_remote.modified_at.strftime("%Y-%m-%d %H:%M"), 
+                        label="📝Modified at", interactive=False, scale=1
+                    )
+                    gr_textbox_be_removed_at = gr.Textbox(
+                        sync_local.be_removed_at.strftime("%Y-%m-%d %H:%M") if sync_local is not None else "", 
+                        label="🗑️Remove local at", interactive=False, scale=1
+                    )
                     gr_md_icon = gr.Markdown(get_icon_emojis(sync_local, sync_remote), elem_id="icon")
                     with gr.Column() as lock_col:
                         with gr.Group():
@@ -221,7 +234,15 @@ def create_gradio_ui():
                         with gr.Group():
                             gr_button_remove_local = gr.Button("🗑️Remove local", interactive=(sync_remote.locked and sync_local is not None))
                             gr_button_copy_to_local = gr.Button("📥Copy to local", interactive=(sync_remote.locked and sync_local is None))
-                    rows.extend([gr_textbox_stem, gr_textbox_id, gr_textbox_recent_sync, gr_md_icon, lock_col, copy_col])
+                    rows.extend([
+                        gr_textbox_stem, 
+                        gr_textbox_created_at, 
+                        gr_textbox_modified_at, 
+                        gr_textbox_be_removed_at, 
+                        gr_md_icon, 
+                        lock_col, 
+                        copy_col,
+                    ])
                     # ボタンクリックイベント登録
                     dir_indicators = [
                         gr_md_icon,

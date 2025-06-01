@@ -27,20 +27,18 @@ class SyncDirectory(BaseModel):
     path_: Path
     id_: str
     created_at: datetime = datetime.now()
-    recent_modified: datetime = created_at
-    recent_sync: datetime = created_at
+    modified_at: datetime = created_at
+    synced_at: datetime = created_at
     modify_log: str = ''
     locked: bool = False
     @property
-    def fixed_days_ago(self) -> int:
-        sync_date = datetime.combine(self.recent_sync.date(), time.min)
-        modified_date = datetime.combine(self.recent_modified.date(), time.min)
-        return (sync_date - modified_date).days
-    @property
-    def created_days_ago(self) -> int:
-        sync_date = datetime.combine(self.recent_sync.date(), time.min)
-        created_date = datetime.combine(self.created_at.date(), time.min)
-        return (sync_date - created_date).days
+    def be_removed_at(self) -> datetime:
+        created_at = datetime.combine(self.created_at.date(), time.min)
+        modified_at = datetime.combine(self.modified_at.date(), time.min)
+        after_create = created_at + timedelta(days=preferences.HoldAfterCreatedDays)
+        after_modify = modified_at + timedelta(days=preferences.HoldAfterModifiedDays)
+        removed_at = max(after_create, after_modify) + timedelta(days=1)
+        return removed_at
 
 
     def copy(self):
@@ -71,9 +69,9 @@ class SyncDirectory(BaseModel):
             dst.path_ = new_dst_path
             print(f'\n{log}')
             logs.append(log)
-            self.recent_modified = now
+            self.modified_at = now
         # 同期確認
-        self.recent_sync = now
+        self.synced_at = now
         command: list = [
             "robocopy",
             self.path_,
@@ -101,7 +99,7 @@ class SyncDirectory(BaseModel):
             print(log)
             # 結果更新
             logs.append(f'Sync: {self.path_.stem}\n{log}')
-            self.recent_modified = now
+            self.modified_at = now
         # 同期ログ出力
         if logs:
             self.modify_log = '\n\n'.join(logs)
@@ -109,17 +107,14 @@ class SyncDirectory(BaseModel):
         shutil.copy2(self.path_ / settings.sync_dir_ext, dst.path_ / settings.sync_dir_ext)
         sync_remote = SyncDirectory.create(dst.path_)
         # 削除チェック
-        print(f'Created: {self.created_days_ago} days ago')
-        print(f'Modified: {self.fixed_days_ago} days ago')
-        if (
-            self.created_days_ago > preferences.HoldAfterCreatedDays  # フォルダ作成後保持期限超過
-            and self.fixed_days_ago > preferences.HoldAfterModifiedDays  # フォルダ更新後保持期限超過
-        ):
+        print(f'Be removed at: {self.be_removed_at:%Y-%m-%d %H:%M}')
+        print(f'Now: {now:%Y-%m-%d %H:%M}')
+        if (now > self.be_removed_at):
             # リモートをロックして削除
             sync_remote.locked = True
             sync_remote.dump()
             self.remove()
-            print(f"Delete local: {self.path_.stem}")
+            print(f"Remove local: {self.path_.stem}")
         return sync_remote
     
     def lock(self):
@@ -168,7 +163,7 @@ class RootDirectory(BaseModel, ABC):
         for dir in dirs:
             sdir = SyncDirectory.create(path_=dir)
             self.sync_directories.append(sdir)
-            print(f'{dir.stem}: {sdir.id_} (recent modify: {sdir.recent_modified:%Y-%m-%d %H:%M:%S})')
+            print(f'{dir.stem}: {sdir.id_} (recent modify: {sdir.modified_at:%Y-%m-%d %H:%M:%S})')
     
 
     def dump(self, filename: Path) -> str:
