@@ -1,0 +1,16 @@
+[project]
+name = "flexcc"
+version = "0.1.0"
+description = "This is a data backup application that runs locally. By specifying a pair of local and remote folders, it automatically backs up data from the local folder to the remote folder."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "apscheduler>=3.11.0",
+    "gradio>=5.29.1",
+    "pydantic>=2.11.4",
+    "pystray>=0.19.5",
+    "python-ulid>=3.0.0",
+    "pyyaml>=6.0.2",
+    "win11toast>=0.35",
+    "wxpython>=4.2.3",
+]
