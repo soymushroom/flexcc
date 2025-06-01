@@ -110,7 +110,7 @@ def remove_local_dir(sync_local: SyncDirectory, sync_remote: SyncDirectory, root
     return (
         get_icon_emojis(None, sync_remote),
         gr.update(interactive=False), 
-        gr.update(interactive=True), 
+        gr.update(interactive=False), 
         gr.update(interactive=False), 
         gr.update(interactive=True), 
     ) 
@@ -216,7 +216,7 @@ def create_gradio_ui():
                     with gr.Column() as lock_col:
                         with gr.Group():
                             gr_button_lock_remote = gr.Button("🔒Lock Remote", interactive=not sync_remote.locked)
-                            gr_button_unlock_remote = gr.Button("🔓Unlock Remote", interactive=sync_remote.locked)
+                            gr_button_unlock_remote = gr.Button("🔓Unlock Remote", interactive=sync_remote.locked and sync_local is not None)
                     with gr.Column() as copy_col:
                         with gr.Group():
                             gr_button_remove_local = gr.Button("🗑️Remove local", interactive=(sync_remote.locked and sync_local is not None))
