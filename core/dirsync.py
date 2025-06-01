@@ -54,7 +54,7 @@ class SyncDirectory(BaseModel):
         # 書き込み
         filename.write_text(yaml.dump(self, allow_unicode=True), encoding='utf8')
 
-    def sync_directories(self, dst: SyncDirectory):
+    def sync(self, dst: SyncDirectory):
         now = datetime.now()
         logs: list[str] = []
         if dst.locked:
@@ -110,7 +110,7 @@ class SyncDirectory(BaseModel):
         print(f'Be removed at: {self.be_removed_at:%Y-%m-%d %H:%M}')
         print(f'Now: {now:%Y-%m-%d %H:%M}')
         if (now > self.be_removed_at):
-            # リモートをロックして削除
+            # リモートをロックして自身を削除
             sync_remote.locked = True
             sync_remote.dump()
             self.remove()
@@ -213,7 +213,7 @@ class LocalRootDirectory(RootDirectory):
         for local_dir in self.sync_directories.copy():
             remote_dir = remote_dir_dict[local_dir.id_]
             local_dir.locked = False
-            remote_dir = local_dir.sync_directories(remote_dir)
+            remote_dir = local_dir.sync(remote_dir)
             # 削除チェック
             if not local_dir.path_.exists():
                 self.sync_directories = [dir_ for dir_ in self.sync_directories if dir_ != local_dir]
