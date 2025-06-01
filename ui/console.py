@@ -6,6 +6,8 @@ from typing import Literal
 from pathlib import Path
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
+from datetime import datetime
+import os
 
 from config import settings
 from config.settings import preferences
@@ -37,6 +39,7 @@ def change_directory_settings(dir: str, dir_type: Literal["local", "remote"]):
 def manual_sync():
     if settings.has_root_dirs():
         watch()
+    return datetime.now()
 
 # 数値設定を反映
 def change_numerical_settings(sync_every: int, hold_after_created: int, hold_after_modified: int, port: int):
@@ -118,11 +121,20 @@ def download_remote_dir(sync_local: SyncDirectory, sync_remote: SyncDirectory, r
         raise gr.Error("Remote folder is not locked.")
     if sync_local is not None:
         raise gr.Error("Local folder already exists.")
-    sync_remote.download(root_local)
+    # コピー先フォルダ生成
+    dst = root_local.path_ / sync_remote.path_.stem
+    os.makedirs(dst, exist_ok=True)
+    sync_local = SyncDirectory.create(dst, sync_remote.id_)
+    # 同期実行
+    sync_remote.sync_directories(sync_local)
+    # ローカルプロパティ更新
+    now = sync_remote.recent_sync
+    sync_local.recent_modified = now
+    sync_local.recent_sync = now
     root_local.sync_directories.append(sync_local)
     root_local.dump()
     return (
-        get_icon_emojis(sync_remote, sync_remote),
+        get_icon_emojis(sync_local, sync_remote),
         gr.update(interactive=False), 
         gr.update(interactive=True), 
         gr.update(interactive=True), 
@@ -135,6 +147,7 @@ def download_remote_dir(sync_local: SyncDirectory, sync_remote: SyncDirectory, r
 def create_gradio_ui():
     css = (Path("ui") / "console_main.css").read_text(encoding="utf8")
     with gr.Blocks(css=css) as demo:
+        gr_state_on = gr.State(False)
         # 設定
         has_root_dirs = settings.has_root_dirs()
         with gr.Accordion("Preferences", open=not has_root_dirs) as gr_accordion_pref:
@@ -146,8 +159,8 @@ def create_gradio_ui():
                 gr_btn_open_remote: gr.Button = gr.Button("Open", elem_id="button")
             with gr.Row(equal_height=True):
                 gr_num_sync_freq_mins: gr.Number = gr.Number(preferences.SyncFreqMinutes, minimum=1, step=1, label="🔄️Sync Every [mins]", interactive=True)
-                gr_num_hold_after_created_days: gr.Number = gr.Number(preferences.HoldAfterCreatedDays, minimum=1, step=1, label="📄Remove Local After Created [days]", interactive=True)
-                gr_num_hold_after_modified_days: gr.Number = gr.Number(preferences.HoldAfterModifiedDays, minimum=1, step=1, label="📝Remove Local After Modified [days]", interactive=True)
+                gr_num_hold_after_created_days: gr.Number = gr.Number(preferences.HoldAfterCreatedDays, minimum=0, step=1, label="📄Remove Local After Created [days]", interactive=True)
+                gr_num_hold_after_modified_days: gr.Number = gr.Number(preferences.HoldAfterModifiedDays, minimum=0, step=1, label="📝Remove Local After Modified [days]", interactive=True)
                 gr_num_server_port: gr.Number = gr.Number(preferences.ServerPort, minimum=1, step=1, label="💻Console Server Port (from next launch)", interactive=True)
                 gr_btn_apply_settings: gr.Button = gr.Button("Apply", elem_id="button")
         gr_btn_open_local.click(select_directory, inputs=gr_text_local, outputs=gr_text_local)
@@ -162,15 +175,14 @@ def create_gradio_ui():
         ])
         # 同期ボタン
         gr_btn_sync = gr.Button("Sync Manually")
-        gr_btn_sync.click(manual_sync)
+        gr_btn_sync.click(manual_sync, outputs=gr_state_on)
         # フォルダビューワー
         container = gr.Column()
         gr_timer = gr.Timer(settings.console_refresh_interval_sec)
         gr_dummy = gr.State(False)
-        gr_state_on = gr.State(False)
 
         # フォルダ一覧の描画処理
-        @gr.render(inputs=[gr_dummy], triggers=[gr_timer.tick, gr_btn_sync.click, gr_state_on.change])
+        @gr.render(inputs=[gr_dummy], triggers=[gr_timer.tick, gr_state_on.change])
         def render_items(gr_dummy):
             if gr_dummy:
                 return

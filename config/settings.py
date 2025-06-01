@@ -26,8 +26,8 @@ class Preferences(BaseModel):
 
     LocalDirectory: Path | None = None
     RemoteDirectory: Path | None = None
-    SyncFreqMinutes: int = 5
-    HoldAfterCreatedDays: int = 32
+    SyncFreqMinutes: int = 15
+    HoldAfterCreatedDays: int = 15
     HoldAfterModifiedDays: int = 8
     ServerPort: int = 28541
 
