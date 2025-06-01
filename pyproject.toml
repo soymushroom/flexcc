@@ -1,7 +1,7 @@
 [project]
-name = "flex-carbon-copy"
+name = "flexcc"
 version = "0.1.0"
-description = "Add your description here"
+description = "This is a data backup application that runs locally. By specifying a pair of local and remote folders, it automatically backs up data from the local folder to the remote folder."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
