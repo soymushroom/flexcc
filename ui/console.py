@@ -2,9 +2,7 @@ import gradio as gr
 import yaml
 import wx
 app = wx.App(False)
-from typing import Literal
 from pathlib import Path
-from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from datetime import datetime
 import os
@@ -25,16 +23,6 @@ def select_directory(default: str):
     dialog.Destroy()
     return folder
 
-# フォルダ変更を設定に反映
-def change_directory_settings(dir: str, dir_type: Literal["local", "remote"]):
-    if dir_type == "local":
-        preferences.LocalDirectory = Path(dir)
-    if dir_type == "remote":
-        preferences.RemoteDirectory = Path(dir)
-    preferences.dump()
-    if settings.has_root_dirs():
-        watch()
-
 # マニュアル同期
 def manual_sync():
     if settings.has_root_dirs():
@@ -42,15 +30,15 @@ def manual_sync():
     return datetime.now()
 
 # 数値設定を反映
-def change_numerical_settings(sync_every: int, hold_after_created: int, hold_after_modified: int, port: int):
+def apply_settings(local_root: str, remote_root: str, sync_every: int, hold_after_created: int, hold_after_modified: int, port: int):
+    preferences.LocalDirectory = Path(local_root)
+    preferences.RemoteDirectory = Path(remote_root)
     if sync_every != preferences.SyncFreqMinutes:
         preferences.SyncFreqMinutes = sync_every
         scheduler.modify_job(
             job_id="watch_sync",
             trigger=IntervalTrigger(seconds=sync_every*60)
         )
-        if settings.has_root_dirs():
-            watch()
     if hold_after_created != preferences.HoldAfterCreatedDays:
         preferences.HoldAfterCreatedDays = hold_after_created
     if hold_after_modified != preferences.HoldAfterModifiedDays:
@@ -58,7 +46,8 @@ def change_numerical_settings(sync_every: int, hold_after_created: int, hold_aft
     if port != preferences.ServerPort:
         preferences.ServerPort = port
     preferences.dump()
-    gr.Info("Setting changed.")
+    gr.Info("Preferences updated.")
+    return manual_sync()
 
 # 絵文字取得
 def get_icon_emojis(sync_rocal: SyncDirectory, sync_remote: SyncDirectory):
@@ -126,7 +115,7 @@ def download_remote_dir(sync_local: SyncDirectory, sync_remote: SyncDirectory, r
     os.makedirs(dst, exist_ok=True)
     sync_local = SyncDirectory.create(dst, sync_remote.id_)
     # 同期実行
-    sync_remote.sync_directories(sync_local)
+    sync_remote.sync(sync_local)
     # ローカルプロパティ更新
     now = sync_remote.synced_at
     sync_local.created_at = sync_remote.created_at
@@ -163,17 +152,17 @@ def create_gradio_ui():
                 gr_num_hold_after_created_days: gr.Number = gr.Number(preferences.HoldAfterCreatedDays, minimum=0, step=1, label="📄Remove Local After Created [days]", interactive=True)
                 gr_num_hold_after_modified_days: gr.Number = gr.Number(preferences.HoldAfterModifiedDays, minimum=0, step=1, label="📝Remove Local After Modified [days]", interactive=True)
                 gr_num_server_port: gr.Number = gr.Number(preferences.ServerPort, minimum=1, step=1, label="💻Console Server Port (from next launch)", interactive=True)
-                gr_btn_apply_settings: gr.Button = gr.Button("Apply", elem_id="button")
+            gr_btn_apply_settings: gr.Button = gr.Button("Apply")
         gr_btn_open_local.click(select_directory, inputs=gr_text_local, outputs=gr_text_local)
         gr_btn_open_remote.click(select_directory, inputs=gr_text_remote, outputs=gr_text_remote)
-        gr_text_local.change(change_directory_settings, inputs=[gr_text_local, gr.State("local")])
-        gr_text_remote.change(change_directory_settings, inputs=[gr_text_remote, gr.State("remote")])
-        gr_btn_apply_settings.click(change_numerical_settings, inputs=[
+        gr_btn_apply_settings.click(apply_settings, inputs=[
+            gr_text_local,
+            gr_text_remote,
             gr_num_sync_freq_mins,
             gr_num_hold_after_created_days,
             gr_num_hold_after_modified_days,
             gr_num_server_port,
-        ])
+        ], outputs=gr_state_on)
         # 同期ボタン
         gr_btn_sync = gr.Button("Sync Manually")
         gr_btn_sync.click(manual_sync, outputs=gr_state_on)
@@ -201,10 +190,14 @@ def create_gradio_ui():
                 if sync_dir.id_ not in ids.keys():
                     ids[sync_dir.id_] = dict()
                 ids[sync_dir.id_]["remote"] = sync_dir
+            # 同期時刻を表示
+            synced_at = ""
+            sync_times = [x.synced_at for x in root_local.sync_directories]
+            if sync_times:
+                synced_at = max(sync_times).strftime("%Y-%m-%d %H:%M")
+            gr.Markdown(f"Synced at: {synced_at}")
             # フォルダ概要を表示
             rows = []
-            synced_at = max([x.synced_at for x in root_local.sync_directories])
-            gr.Markdown(f"Synced at: {synced_at:%Y-%m-%d %H:%M}")
             for k, v in sorted(ids.items(), reverse=True):
                 sync_local: SyncDirectory = v["local"] if "local" in v.keys() else None
                 sync_remote: SyncDirectory = v["remote"] if "remote" in v.keys() else None
@@ -217,8 +210,9 @@ def create_gradio_ui():
                         sync_remote.created_at.strftime("%Y-%m-%d %H:%M"), 
                         label="📄Created at", interactive=False, scale=1
                     )
+                    modified_at = sync_local.modified_at if sync_local is not None else sync_remote.modified_at
                     gr_textbox_modified_at = gr.Textbox(
-                        sync_remote.modified_at.strftime("%Y-%m-%d %H:%M"), 
+                        modified_at.strftime("%Y-%m-%d %H:%M"), 
                         label="📝Modified at", interactive=False, scale=1
                     )
                     gr_textbox_be_removed_at = gr.Textbox(
