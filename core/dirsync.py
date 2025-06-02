@@ -14,9 +14,12 @@ from win11toast import toast
 import io
 from contextlib import redirect_stdout
 import copy
+import importlib.util
+import inspect
 
 from config import settings
 from config.settings import preferences
+from scripts.user_script import load_main_function
 
 
 class SyncDirectory(BaseModel):
@@ -31,6 +34,7 @@ class SyncDirectory(BaseModel):
     synced_at: datetime = created_at
     modify_log: str = ''
     locked: bool = False
+    custom_scripts: list[str] = []
     @property
     def be_removed_at(self) -> datetime:
         created_at = datetime.combine(self.created_at.date(), time.min)
@@ -87,6 +91,7 @@ class SyncDirectory(BaseModel):
         ]
         print(f'\nSync: {self.path_.stem}')
         result = subprocess.run(command, capture_output=True, text=True, shell=True)
+        sync_log = None
         if result.returncode > 7:
             print('Error')
         elif result.returncode == 0:
@@ -95,10 +100,10 @@ class SyncDirectory(BaseModel):
             # ミラーリング実行
             copy_command = [c for c in command if c != '/L']
             result = subprocess.run(copy_command, capture_output=True, text=True, shell=True)
-            log = result.stdout[1:-1].replace(' ', '').replace('\t', ' ')
-            print(log)
+            sync_log = result.stdout[1:-1].replace(' ', '').replace('\t', ' ')
+            print(sync_log)
             # 結果更新
-            logs.append(f'Sync: {self.path_.stem}\n{log}')
+            logs.append(f'Sync: {self.path_.stem}\n{sync_log}')
             self.modified_at = now
         # 同期ログ出力
         if logs:
@@ -106,6 +111,15 @@ class SyncDirectory(BaseModel):
         self.dump()
         shutil.copy2(self.path_ / settings.sync_dir_ext, dst.path_ / settings.sync_dir_ext)
         sync_remote = SyncDirectory.create(dst.path_)
+        # カスタムスクリプト実行
+        for script in self.custom_scripts:
+            print(f"Custom script: {script}")
+            main_fn = load_main_function(script)
+            print("--- docstring ---")
+            print(inspect.getdoc(main_fn) or "(なし)")
+            print("--- run ---")
+            main_fn([Path("app.py"), Path("ui") / "console.py"], [])
+            print("--- end ---")
         # 削除チェック
         print(f'Be removed at: {self.be_removed_at:%Y-%m-%d %H:%M}')
         print(f'Now: {now:%Y-%m-%d %H:%M}')
