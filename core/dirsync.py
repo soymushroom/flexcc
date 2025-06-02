@@ -88,9 +88,9 @@ class SyncDirectory(BaseModel):
         print(f'\nSync: {self.path_.stem}')
         result = subprocess.run(command, capture_output=True, text=True, shell=True)
         if result.returncode > 7:
-            print('エラー発生')
+            print('Error')
         elif result.returncode == 0:
-            print('変更なし')
+            print('No change')
         elif result.returncode:
             # ミラーリング実行
             copy_command = [c for c in command if c != '/L']
@@ -202,8 +202,8 @@ class LocalRootDirectory(RootDirectory):
                     buffer = io.StringIO()
                     with redirect_stdout(buffer):
                         toast(
-                            'リモートフォルダの競合', 
-                            'リモートフォルダにすでに同名のフォルダが存在します。', 
+                            'Conflict on remote', 
+                            'A folder with the same name already exists in the remote.', 
                         )
                     captured_output = buffer.getvalue()
                     return
