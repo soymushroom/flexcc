@@ -6,11 +6,14 @@ dist/
 wheels/
 *.egg-info
 
-# Virtual environments
+# virtual environments
 .venv
 
-# Cache directory
+# cache directory
 cache/
+
+# built docs
+site
 
 # preference file
 config/preferences.yaml
