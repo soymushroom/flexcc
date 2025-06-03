@@ -11,8 +11,8 @@ scheduler: BackgroundScheduler = BackgroundScheduler()
 def watch():
     if not settings.has_root_dirs():
         return
-    local = LocalRootDirectory(path_=preferences.LocalDirectory)
-    remote = RemoteRootDirectory(path_=preferences.RemoteDirectory)
+    local = LocalRootDirectory(path_=preferences.local_directory)
+    remote = RemoteRootDirectory(path_=preferences.remote_directory)
     print('Local:')
     local.check()
     print('\nRemote:')
@@ -23,7 +23,7 @@ def watch():
 
 
 def create_scheduler() -> BackgroundScheduler:
-    scheduler.add_job(func=watch, trigger="interval", seconds=preferences.SyncFreqMinutes*60, next_run_time=datetime.now(), id="watch_sync")
+    scheduler.add_job(func=watch, trigger="interval", seconds=preferences.sync_freq_minutes*60, next_run_time=datetime.now(), id="watch_sync")
     return scheduler
 
 

@@ -24,12 +24,13 @@ class Preferences(BaseModel):
     ユーザー設定を保持するクラス
     """
 
-    LocalDirectory: Path | None = None
-    RemoteDirectory: Path | None = None
-    SyncFreqMinutes: int = 15
-    HoldAfterCreatedDays: int = 15
-    HoldAfterModifiedDays: int = 8
-    ServerPort: int = 28541
+    local_directory: Path | None = None
+    remote_directory: Path | None = None
+    sync_freq_minutes: int = 15
+    hold_after_created_days: int = 15
+    hold_after_modified_days: int = 8
+    server_port: int = 28541
+    custom_scripts: list[str] = []
 
 
     def dump(self) -> str:
@@ -60,8 +61,8 @@ else:
 
 def has_root_dirs():
     return (
-        preferences.LocalDirectory
-        and preferences.RemoteDirectory
-        and preferences.LocalDirectory.exists()
-        and preferences.RemoteDirectory.exists()
+        preferences.local_directory
+        and preferences.remote_directory
+        and preferences.local_directory.exists()
+        and preferences.remote_directory.exists()
     )

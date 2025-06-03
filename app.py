@@ -13,7 +13,7 @@ async def main():
     create_scheduler()
     # GradioのUI起動（非ブロッキング）
     demo = create_gradio_ui()
-    demo.launch(prevent_thread_lock=True, server_port=preferences.ServerPort)
+    demo.launch(prevent_thread_lock=True, server_port=preferences.server_port)
     # スケジューラ起動
     start_scheduler()
     # トレイアイコンを非同期スレッドで実行

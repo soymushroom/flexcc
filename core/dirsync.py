@@ -14,12 +14,12 @@ from win11toast import toast
 import io
 from contextlib import redirect_stdout
 import copy
-import importlib.util
 import inspect
+import re
 
 from config import settings
 from config.settings import preferences
-from scripts.user_script import load_main_function
+from scripts.custom_script import load_main_function, CustomScriptAttributes
 
 
 class SyncDirectory(BaseModel):
@@ -34,13 +34,12 @@ class SyncDirectory(BaseModel):
     synced_at: datetime = created_at
     modify_log: str = ''
     locked: bool = False
-    custom_scripts: list[str] = []
     @property
     def be_removed_at(self) -> datetime:
         created_at = datetime.combine(self.created_at.date(), time.min)
         modified_at = datetime.combine(self.modified_at.date(), time.min)
-        after_create = created_at + timedelta(days=preferences.HoldAfterCreatedDays)
-        after_modify = modified_at + timedelta(days=preferences.HoldAfterModifiedDays)
+        after_create = created_at + timedelta(days=preferences.hold_after_created_days)
+        after_modify = modified_at + timedelta(days=preferences.hold_after_modified_days)
         removed_at = max(after_create, after_modify) + timedelta(days=1)
         return removed_at
 
@@ -85,7 +84,7 @@ class SyncDirectory(BaseModel):
             "/NP",    # 進行状況バー非表示
             "/NDL",   # ディレクトリ一覧非表示
             "/NS",    # ファイルサイズを表示しない
-            # "/NC",    # クラス（例：新規ファイルなど）を表示しない
+            "/NC",    # クラス（例：新規ファイルなど）を表示しない
             "/NJH",   # ジョブヘッダを表示しない（開始時の情報）
             "/NJS",   # ジョブサマリを表示しない（統計情報）
         ]
@@ -100,7 +99,7 @@ class SyncDirectory(BaseModel):
             # ミラーリング実行
             copy_command = [c for c in command if c != '/L']
             result = subprocess.run(copy_command, capture_output=True, text=True, shell=True)
-            sync_log = result.stdout[1:-1].replace(' ', '').replace('\t', ' ')
+            sync_log = result.stdout[1:-1].replace('\t', '')
             print(sync_log)
             # 結果更新
             logs.append(f'Sync: {self.path_.stem}\n{sync_log}')
@@ -111,17 +110,29 @@ class SyncDirectory(BaseModel):
         self.dump()
         shutil.copy2(self.path_ / settings.sync_dir_ext, dst.path_ / settings.sync_dir_ext)
         sync_remote = SyncDirectory.create(dst.path_)
-        # カスタムスクリプト実行
-        for script in self.custom_scripts:
-            print(f"Custom script: {script}")
-            main_fn = load_main_function(script)
-            print("--- docstring ---")
-            print(inspect.getdoc(main_fn) or "(なし)")
-            print("--- run ---")
-            main_fn([Path("app.py"), Path("ui") / "console.py"], [])
-            print("--- end ---")
+        # 同期実行後処理
+        if sync_log is not None:
+            # ファイル一覧取得
+            pattern = re.compile(r" *(.*)")
+            paths = [Path(pattern.match(x).group(1)) for x in sync_log.split("\n")]
+            modified_files, removed_files = [], []
+            for path_ in paths:
+                if path_.exists():
+                    modified_files.append(path_.relative_to(self.path_))
+                else:
+                    removed_files.append(path_.relative_to(sync_remote.path_))
+            # カスタムスクリプト実行
+            for script in preferences.custom_scripts:
+                attr: CustomScriptAttributes = CustomScriptAttributes.create(script)
+                print(f"Run custom script: {attr.name}")
+                main_fn = load_main_function(script)
+                print("--- docstring ---")
+                print(inspect.getdoc(main_fn) or "(なし)")
+                print("--- run ---")
+                main_fn(self, sync_remote, modified_files, removed_files)
+                print("--- end ---")
         # 削除チェック
-        print(f'Be removed at: {self.be_removed_at:%Y-%m-%d %H:%M}')
+        print(f'Will be removed at: {self.be_removed_at:%Y-%m-%d %H:%M}')
         print(f'Now: {now:%Y-%m-%d %H:%M}')
         if (now > self.be_removed_at):
             # リモートをロックして自身を削除

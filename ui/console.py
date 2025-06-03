@@ -31,20 +31,20 @@ def manual_sync():
 
 # 数値設定を反映
 def apply_settings(local_root: str, remote_root: str, sync_every: int, hold_after_created: int, hold_after_modified: int, port: int):
-    preferences.LocalDirectory = Path(local_root)
-    preferences.RemoteDirectory = Path(remote_root)
-    if sync_every != preferences.SyncFreqMinutes:
-        preferences.SyncFreqMinutes = sync_every
+    preferences.local_directory = Path(local_root)
+    preferences.remote_directory = Path(remote_root)
+    if sync_every != preferences.sync_freq_minutes:
+        preferences.sync_freq_minutes = sync_every
         scheduler.modify_job(
             job_id="watch_sync",
             trigger=IntervalTrigger(seconds=sync_every*60)
         )
-    if hold_after_created != preferences.HoldAfterCreatedDays:
-        preferences.HoldAfterCreatedDays = hold_after_created
-    if hold_after_modified != preferences.HoldAfterModifiedDays:
-        preferences.HoldAfterModifiedDays = hold_after_modified
-    if port != preferences.ServerPort:
-        preferences.ServerPort = port
+    if hold_after_created != preferences.hold_after_created_days:
+        preferences.hold_after_created_days = hold_after_created
+    if hold_after_modified != preferences.hold_after_modified_days:
+        preferences.hold_after_modified_days = hold_after_modified
+    if port != preferences.server_port:
+        preferences.server_port = port
     preferences.dump()
     gr.Info("Preferences updated.")
     return manual_sync()
@@ -142,16 +142,16 @@ def create_gradio_ui():
         has_root_dirs = settings.has_root_dirs()
         with gr.Accordion("Preferences", open=not has_root_dirs) as gr_accordion_pref:
             with gr.Row(equal_height=True):
-                gr_text_local: gr.Textbox = gr.Textbox(str(preferences.LocalDirectory), label="📁Local Folder", interactive=False)
+                gr_text_local: gr.Textbox = gr.Textbox(str(preferences.local_directory), label="📁Local Folder", interactive=False)
                 gr_btn_open_local: gr.Button = gr.Button("Open", elem_id="button")
             with gr.Row(equal_height=True):
-                gr_text_remote: gr.Textbox = gr.Textbox(str(preferences.RemoteDirectory), label="☁️Remote Folder", interactive=False)
+                gr_text_remote: gr.Textbox = gr.Textbox(str(preferences.remote_directory), label="☁️Remote Folder", interactive=False)
                 gr_btn_open_remote: gr.Button = gr.Button("Open", elem_id="button")
             with gr.Row(equal_height=True):
-                gr_num_sync_freq_mins: gr.Number = gr.Number(preferences.SyncFreqMinutes, minimum=1, step=1, label="🔄️Sync Every [mins]", interactive=True)
-                gr_num_hold_after_created_days: gr.Number = gr.Number(preferences.HoldAfterCreatedDays, minimum=0, step=1, label="📄Remove Local After Created [days]", interactive=True)
-                gr_num_hold_after_modified_days: gr.Number = gr.Number(preferences.HoldAfterModifiedDays, minimum=0, step=1, label="📝Remove Local After Modified [days]", interactive=True)
-                gr_num_server_port: gr.Number = gr.Number(preferences.ServerPort, minimum=1, step=1, label="💻Console Server Port (from next launch)", interactive=True)
+                gr_num_sync_freq_mins: gr.Number = gr.Number(preferences.sync_freq_minutes, minimum=1, step=1, label="🔄️Sync Every [mins]", interactive=True)
+                gr_num_hold_after_created_days: gr.Number = gr.Number(preferences.hold_after_created_days, minimum=0, step=1, label="📄Remove Local After Created [days]", interactive=True)
+                gr_num_hold_after_modified_days: gr.Number = gr.Number(preferences.hold_after_modified_days, minimum=0, step=1, label="📝Remove Local After Modified [days]", interactive=True)
+                gr_num_server_port: gr.Number = gr.Number(preferences.server_port, minimum=1, step=1, label="💻Console Server Port (from next launch)", interactive=True)
             gr_btn_apply_settings: gr.Button = gr.Button("Apply")
         gr_btn_open_local.click(select_directory, inputs=gr_text_local, outputs=gr_text_local)
         gr_btn_open_remote.click(select_directory, inputs=gr_text_remote, outputs=gr_text_remote)

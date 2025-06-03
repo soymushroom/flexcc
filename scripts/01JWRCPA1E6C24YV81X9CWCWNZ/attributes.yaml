@@ -1,6 +1,8 @@
 !CustomScriptAttributes
 author: "soymushroom"
-name: "Image backup"
+favorite: false
+name: "Print sync result"
+star: 0
 tags:
 - "image"
 version: 1
