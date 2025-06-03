@@ -127,7 +127,7 @@ class SyncDirectory(BaseModel):
                 print(f"Run custom script: {attr.name}")
                 main_fn = load_main_function(script)
                 print("--- docstring ---")
-                print(inspect.getdoc(main_fn) or "(なし)")
+                print(inspect.getdoc(main_fn) or "(None)")
                 print("--- run ---")
                 main_fn(self, sync_remote, modified_files, removed_files)
                 print("--- end ---")

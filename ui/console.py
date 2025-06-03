@@ -6,11 +6,14 @@ from pathlib import Path
 from apscheduler.triggers.interval import IntervalTrigger
 from datetime import datetime
 import os
+import inspect
+from glob import glob
 
 from config import settings
 from config.settings import preferences
 from core.dirsync import LocalRootDirectory, RemoteRootDirectory, SyncDirectory
 from backend import watch, scheduler
+from scripts.custom_script import load_main_function, CustomScriptAttributes
 
 # --- コールバック ---
 
@@ -131,16 +134,24 @@ def download_remote_dir(sync_local: SyncDirectory, sync_remote: SyncDirectory, r
         gr.update(interactive=False), 
     ) 
 
+# カスタムスクリプトの割り当て
+def assign_custom_script(index: int, id_: str):
+    preferences.custom_scripts[index] = id_
+    fn = load_main_function(id_)
+    return f"```\n{inspect.getdoc(fn)}" if inspect.getdoc(fn) else "```\nNo Description."
+
 # --- UI実装 ---
 
 # gradioインターフェースの作成
 def create_gradio_ui():
+    is_initial_call = True
     css = (Path("ui") / "console_main.css").read_text(encoding="utf8")
     with gr.Blocks(css=css) as demo:
         gr_state_on = gr.State(False)
         # 設定
-        has_root_dirs = settings.has_root_dirs()
-        with gr.Accordion("Preferences", open=not has_root_dirs) as gr_accordion_pref:
+        with gr.Sidebar(width=720, open=not settings.has_root_dirs()):
+            gr.Markdown("# Preferences")
+            gr.Markdown("## Basic settings")
             with gr.Row(equal_height=True):
                 gr_text_local: gr.Textbox = gr.Textbox(str(preferences.local_directory), label="📁Local Folder", interactive=False)
                 gr_btn_open_local: gr.Button = gr.Button("Open", elem_id="button")
@@ -148,11 +159,62 @@ def create_gradio_ui():
                 gr_text_remote: gr.Textbox = gr.Textbox(str(preferences.remote_directory), label="☁️Remote Folder", interactive=False)
                 gr_btn_open_remote: gr.Button = gr.Button("Open", elem_id="button")
             with gr.Row(equal_height=True):
-                gr_num_sync_freq_mins: gr.Number = gr.Number(preferences.sync_freq_minutes, minimum=1, step=1, label="🔄️Sync Every [mins]", interactive=True)
-                gr_num_hold_after_created_days: gr.Number = gr.Number(preferences.hold_after_created_days, minimum=0, step=1, label="📄Remove Local After Created [days]", interactive=True)
-                gr_num_hold_after_modified_days: gr.Number = gr.Number(preferences.hold_after_modified_days, minimum=0, step=1, label="📝Remove Local After Modified [days]", interactive=True)
-                gr_num_server_port: gr.Number = gr.Number(preferences.server_port, minimum=1, step=1, label="💻Console Server Port (from next launch)", interactive=True)
+                gr_num_server_port: gr.Number = gr.Number(
+                    preferences.server_port, 
+                    minimum=1, step=1, label="💻Console Server Port (from next launch)", interactive=True)
+                gr_num_sync_freq_mins: gr.Number = gr.Number(
+                    preferences.sync_freq_minutes, 
+                    minimum=1, step=1, label="🔄️Sync Every [mins]", interactive=True)
+            with gr.Row(equal_height=True):
+                gr_num_hold_after_modified_days: gr.Number = gr.Number(
+                    preferences.hold_after_modified_days, 
+                    minimum=0, step=1, label="📝Remove Local After Modified [days]", interactive=True)
+                gr_num_hold_after_created_days: gr.Number = gr.Number(
+                    preferences.hold_after_created_days, 
+                    minimum=0, step=1, label="📄Remove Local After Created [days]", interactive=True)
+            gr.Markdown("## Custom Scripts")
+            gr_custom_script_container = gr.Column()
+            # スクリプト表示更新
+            gr_state_script_changed = gr.State(False)
+            @gr.render(triggers=[gr_state_script_changed.change])
+            def render_custom_scripts():
+                if is_initial_call:
+                    return
+                # IDと名前の対応表を取得
+                name_counts: dict[str, int] = {}
+                id_name_dict: dict[str, str] = {}
+                ids = [Path(x).stem for x in glob("scripts/??????????????????????????/")]
+                for id_ in ids:
+                    name = CustomScriptAttributes.create(id_).name
+                    suffix = ""
+                    if name in name_counts.keys():
+                        suffix = f"({name_counts[name] + 1})"
+                    else:
+                        name_counts[name] = 0
+                    id_name_dict[id_] = name + suffix
+                    name_counts[name] += 1
+                name_id_dict = {v: k for k, v in id_name_dict.items()}
+                # スクリプト一覧表示
+                rows = []
+                for num, id_ in enumerate(preferences.custom_scripts):
+                    fn = load_main_function(id_)
+                    attr = CustomScriptAttributes.create(id_)
+                    gr_dd_script_name = gr.Dropdown(tuple(id_name_dict.values()), value=id_name_dict[id_], show_label=False, interactive=True)
+                    gr_md_script_description = gr.Markdown(f"```\n{inspect.getdoc(fn)}" if inspect.getdoc(fn) else "```\nNo Description.")
+                    # イベント
+                    gr_dd_script_name.change(
+                        lambda x: assign_custom_script(num, name_id_dict[x]),
+                        inputs=gr_dd_script_name,
+                        outputs=[
+                            gr_md_script_description,
+                        ]
+                    )
+                return rows
+            gr_custom_script_container.render = render_custom_scripts()
+            gr_btn_add_script: gr.Button = gr.Button("🚀 Add Script")
+            # 設定ボタン
             gr_btn_apply_settings: gr.Button = gr.Button("Apply")
+        # イベント
         gr_btn_open_local.click(select_directory, inputs=gr_text_local, outputs=gr_text_local)
         gr_btn_open_remote.click(select_directory, inputs=gr_text_remote, outputs=gr_text_remote)
         gr_btn_apply_settings.click(apply_settings, inputs=[
@@ -163,19 +225,15 @@ def create_gradio_ui():
             gr_num_hold_after_modified_days,
             gr_num_server_port,
         ], outputs=gr_state_on)
+
         # 同期ボタン
         gr_btn_sync = gr.Button("Sync Manually")
         gr_btn_sync.click(manual_sync, outputs=gr_state_on)
         # フォルダビューワー
-        container = gr.Column()
+        gr_sync_dir_container = gr.Column()
         gr_timer = gr.Timer(settings.console_refresh_interval_sec)
-        gr_dummy = gr.State(False)
-
-        # フォルダ一覧の描画処理
-        @gr.render(inputs=[gr_dummy], triggers=[gr_timer.tick, gr_state_on.change])
-        def render_items(gr_dummy):
-            if gr_dummy:
-                return
+        @gr.render(triggers=[gr_timer.tick, gr_state_on.change])
+        def render_sync_dirs():
             # フォルダ一覧取得
             if not settings.local_dump_filename.exists() or not settings.remote_dump_filename.exists():
                 return
@@ -287,6 +345,7 @@ def create_gradio_ui():
                     )
             return rows
 
-        container.render = render_items(gr_dummy)
-        demo.load(lambda: True, outputs=gr_state_on)
+        gr_sync_dir_container.render = render_sync_dirs()
+        demo.load(lambda: (True, True), outputs=[gr_state_on, gr_state_script_changed])
+        is_initial_call = False
         return demo
