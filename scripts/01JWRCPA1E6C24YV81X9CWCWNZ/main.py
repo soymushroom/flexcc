@@ -13,6 +13,7 @@ def main(local_sync: SyncDirectory, remote_sync: SyncDirectory, modified_files: 
         modified_files (list[Path]): A list of file paths that have been modified.
         removed_files (list[Path]): A list of file paths that have been removed.
     """
+    print("Script 1")
     print(f"Local: {str(local_sync.path_)}")
     print(f"Remote: {str(remote_sync.path_)}")
     print("Modified: ")

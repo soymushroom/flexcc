@@ -8,6 +8,7 @@ from datetime import datetime
 import os
 import inspect
 from glob import glob
+import html
 
 from config import settings
 from config.settings import preferences
@@ -32,7 +33,7 @@ def manual_sync():
         watch()
     return datetime.now()
 
-# 数値設定を反映
+# 設定を反映
 def apply_settings(local_root: str, remote_root: str, sync_every: int, hold_after_created: int, hold_after_modified: int, port: int):
     preferences.local_directory = Path(local_root)
     preferences.remote_directory = Path(remote_root)
@@ -50,6 +51,37 @@ def apply_settings(local_root: str, remote_root: str, sync_every: int, hold_afte
         preferences.server_port = port
     preferences.dump()
     gr.Info("Preferences updated.")
+    return manual_sync()
+
+# プレーンテキスト取得
+def get_plain_text(text):
+    text = html.escape(text)
+    return f"<pre>{text}</pre>"
+
+# カスタムスクリプトの割り当て
+def assign_custom_script(name_id_dict: dict[str, str], name: str, idx: int, script_ids: list[str]):
+    id_ = name_id_dict[name]
+    fn = load_main_function(id_)
+    script_ids[idx] = id_
+    description = get_plain_text(f"{inspect.getdoc(fn)}" if inspect.getdoc(fn) else "No Description.")
+    return (
+        script_ids,
+        gr.update(open=True),
+        description, 
+    )
+
+# カスタムスクリプトの追加
+def add_custom_script(script_ids: list[str], id_name_dict: dict[str, str]):
+    if len(id_name_dict.keys()) == 0:
+        return []
+    script_ids += [tuple(id_name_dict.keys())[0]]
+    return script_ids, datetime.now()
+
+# カスタムスクリプトの保存
+def save_custom_scripts(script_ids: list[str]):
+    preferences.custom_scripts = script_ids
+    preferences.dump()
+    gr.Info("Custom scripts updated.")
     return manual_sync()
 
 # 絵文字取得
@@ -134,12 +166,6 @@ def download_remote_dir(sync_local: SyncDirectory, sync_remote: SyncDirectory, r
         gr.update(interactive=False), 
     ) 
 
-# カスタムスクリプトの割り当て
-def assign_custom_script(index: int, id_: str):
-    preferences.custom_scripts[index] = id_
-    fn = load_main_function(id_)
-    return f"```\n{inspect.getdoc(fn)}" if inspect.getdoc(fn) else "```\nNo Description."
-
 # --- UI実装 ---
 
 # gradioインターフェースの作成
@@ -147,7 +173,7 @@ def create_gradio_ui():
     is_initial_call = True
     css = (Path("ui") / "console_main.css").read_text(encoding="utf8")
     with gr.Blocks(css=css) as demo:
-        gr_state_on = gr.State(False)
+        gr_state_refresh_dirs = gr.State(False)
         # 設定
         with gr.Sidebar(width=720, open=not settings.has_root_dirs()):
             gr.Markdown("# Preferences")
@@ -172,14 +198,15 @@ def create_gradio_ui():
                 gr_num_hold_after_created_days: gr.Number = gr.Number(
                     preferences.hold_after_created_days, 
                     minimum=0, step=1, label="📄Remove Local After Created [days]", interactive=True)
+            # 設定ボタン
+            gr_btn_apply_settings: gr.Button = gr.Button("Apply")
+
+            # カスタムスクリプト
             gr.Markdown("## Custom Scripts")
-            gr_custom_script_container = gr.Column()
-            # スクリプト表示更新
-            gr_state_script_changed = gr.State(False)
-            @gr.render(triggers=[gr_state_script_changed.change])
-            def render_custom_scripts():
-                if is_initial_call:
-                    return
+            gr_state_script_ids = gr.State(preferences.custom_scripts.copy())
+            gr_state_refresh_scripts = gr.State(False)
+            @gr.render(inputs=gr_state_script_ids, triggers=[gr_state_refresh_scripts.change])
+            def render_custom_scripts(script_ids: list[str]):
                 # IDと名前の対応表を取得
                 name_counts: dict[str, int] = {}
                 id_name_dict: dict[str, str] = {}
@@ -194,26 +221,46 @@ def create_gradio_ui():
                     id_name_dict[id_] = name + suffix
                     name_counts[name] += 1
                 name_id_dict = {v: k for k, v in id_name_dict.items()}
+                gr_state_id_name_dict = gr.State(id_name_dict)
+                gr_state_name_id_dict = gr.State(name_id_dict)
                 # スクリプト一覧表示
-                rows = []
-                for num, id_ in enumerate(preferences.custom_scripts):
+                for num, id_ in enumerate(script_ids):
                     fn = load_main_function(id_)
                     attr = CustomScriptAttributes.create(id_)
-                    gr_dd_script_name = gr.Dropdown(tuple(id_name_dict.values()), value=id_name_dict[id_], show_label=False, interactive=True)
-                    gr_md_script_description = gr.Markdown(f"```\n{inspect.getdoc(fn)}" if inspect.getdoc(fn) else "```\nNo Description.")
+                    with gr.Group():
+                        gr_dd_script_name = gr.Dropdown(tuple(id_name_dict.values()), value=id_name_dict[id_], show_label=False, interactive=True)
+                        with gr.Accordion("Description", open=False) as gr_acc_script_description:
+                            text = get_plain_text(f"{inspect.getdoc(fn)}" if inspect.getdoc(fn) else "No Description.")
+                            gr_md_script_description = gr.Markdown(text)
+                    gr_state_script_index = gr.State(num)
                     # イベント
                     gr_dd_script_name.change(
-                        lambda x: assign_custom_script(num, name_id_dict[x]),
-                        inputs=gr_dd_script_name,
+                        assign_custom_script,
+                        inputs=[
+                            gr_state_name_id_dict, 
+                            gr_dd_script_name, 
+                            gr_state_script_index, 
+                            gr_state_script_ids,
+                        ],
                         outputs=[
+                            gr_state_script_ids,
+                            gr_acc_script_description, 
                             gr_md_script_description,
-                        ]
+                        ], 
+                        show_progress=False, 
                     )
-                return rows
-            gr_custom_script_container.render = render_custom_scripts()
-            gr_btn_add_script: gr.Button = gr.Button("🚀 Add Script")
-            # 設定ボタン
-            gr_btn_apply_settings: gr.Button = gr.Button("Apply")
+                gr_btn_add_script.click(
+                    add_custom_script, 
+                    inputs=[gr_state_script_ids, gr_state_id_name_dict],
+                    outputs=[gr_state_script_ids, gr_state_refresh_scripts]
+                )
+                gr_btn_save_scripts.click(
+                    save_custom_scripts, 
+                    inputs=gr_state_script_ids,
+                    outputs=gr_state_refresh_dirs
+                )
+            gr_btn_add_script: gr.Button = gr.Button("Add Script")
+            gr_btn_save_scripts: gr.Button = gr.Button("Save Scripts")
         # イベント
         gr_btn_open_local.click(select_directory, inputs=gr_text_local, outputs=gr_text_local)
         gr_btn_open_remote.click(select_directory, inputs=gr_text_remote, outputs=gr_text_remote)
@@ -224,15 +271,14 @@ def create_gradio_ui():
             gr_num_hold_after_created_days,
             gr_num_hold_after_modified_days,
             gr_num_server_port,
-        ], outputs=gr_state_on)
+        ], outputs=gr_state_refresh_dirs)
 
         # 同期ボタン
         gr_btn_sync = gr.Button("Sync Manually")
-        gr_btn_sync.click(manual_sync, outputs=gr_state_on)
+        gr_btn_sync.click(manual_sync, outputs=gr_state_refresh_dirs)
         # フォルダビューワー
-        gr_sync_dir_container = gr.Column()
         gr_timer = gr.Timer(settings.console_refresh_interval_sec)
-        @gr.render(triggers=[gr_timer.tick, gr_state_on.change])
+        @gr.render(triggers=[gr_timer.tick, gr_state_refresh_dirs.change])
         def render_sync_dirs():
             # フォルダ一覧取得
             if not settings.local_dump_filename.exists() or not settings.remote_dump_filename.exists():
@@ -343,9 +389,5 @@ def create_gradio_ui():
                         outputs=dir_indicators,
                         show_progress=False, 
                     )
-            return rows
-
-        gr_sync_dir_container.render = render_sync_dirs()
-        demo.load(lambda: (True, True), outputs=[gr_state_on, gr_state_script_changed])
-        is_initial_call = False
+        demo.load(lambda: (datetime.now(), datetime.now()), outputs=[gr_state_refresh_dirs, gr_state_refresh_scripts])
         return demo
