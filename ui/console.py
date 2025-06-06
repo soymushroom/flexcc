@@ -15,23 +15,24 @@ from itertools import islice
 import ulid
 
 from config import settings
-from config.settings import preferences
+from config.settings import general_settings
+from scripts.custom_script import custom_script_group
 from core.dirsync import LocalRootDirectory, RemoteRootDirectory, SyncDirectory
 from backend import watch, scheduler
-from scripts.custom_script import load_main_function, CustomScriptAttributes
+from scripts.custom_script import CustomScript, CustomScriptAttributes
 
 # --- コールバック ---
 
 # セッション開始
 def start_session():
     return (
-        str(preferences.local_directory),
-        str(preferences.remote_directory),
-        preferences.server_port,
-        preferences.sync_freq_minutes, 
-        preferences.hold_after_modified_days, 
-        preferences.hold_after_created_days, 
-        preferences.custom_scripts.copy(),
+        str(general_settings.local_directory),
+        str(general_settings.remote_directory),
+        general_settings.server_port,
+        general_settings.sync_freq_minutes, 
+        general_settings.hold_after_modified_days, 
+        general_settings.hold_after_created_days, 
+        custom_script_group.scripts.copy(),
         datetime.now(),
         datetime.now(),
     )
@@ -53,22 +54,22 @@ def manual_sync():
 
 # 設定を反映
 def apply_settings(local_root: str, remote_root: str, sync_every: int, hold_after_created: int, hold_after_modified: int, port: int):
-    preferences.local_directory = Path(local_root)
-    preferences.remote_directory = Path(remote_root)
-    if sync_every != preferences.sync_freq_minutes:
-        preferences.sync_freq_minutes = sync_every
+    general_settings.local_directory = Path(local_root)
+    general_settings.remote_directory = Path(remote_root)
+    if sync_every != general_settings.sync_freq_minutes:
+        general_settings.sync_freq_minutes = sync_every
         scheduler.modify_job(
             job_id="watch_sync",
             trigger=IntervalTrigger(seconds=sync_every*60)
         )
-    if hold_after_created != preferences.hold_after_created_days:
-        preferences.hold_after_created_days = hold_after_created
-    if hold_after_modified != preferences.hold_after_modified_days:
-        preferences.hold_after_modified_days = hold_after_modified
-    if port != preferences.server_port:
-        preferences.server_port = port
-    preferences.dump()
-    gr.Info("Preferences updated.")
+    if hold_after_created != general_settings.hold_after_created_days:
+        general_settings.hold_after_created_days = hold_after_created
+    if hold_after_modified != general_settings.hold_after_modified_days:
+        general_settings.hold_after_modified_days = hold_after_modified
+    if port != general_settings.server_port:
+        general_settings.server_port = port
+    general_settings.dump()
+    gr.Info("General settings are updated.")
     return manual_sync()
 
 # プレーンテキスト取得
@@ -78,7 +79,7 @@ def get_plain_text(text):
     return f"<pre>{text}</pre>"
 
 # 引数オブジェクトの表示
-def create_arg_component(annotation: Any, name, param: inspect.Parameter):
+def create_arg_component(annotation: Any, name, default: Any):
     """
     annotations: typing.get_type_hints() の戻り値 (引数名 → 型ヒント)
     name: パラメータ名
@@ -98,7 +99,7 @@ def create_arg_component(annotation: Any, name, param: inspect.Parameter):
     args = get_args(annotation)
     kwargs = {
         "label": name,
-        "value": None if param.default is inspect.Parameter.empty else param.default, 
+        "value": default, 
     }
 
     # 1) Literal の場合
@@ -152,26 +153,32 @@ def create_arg_component(annotation: Any, name, param: inspect.Parameter):
 
 
 # カスタムスクリプトの割り当て
-def assign_custom_script(name_id_dict: dict[str, str], name: str, idx: int, script_ids: list[str]):
+def assign_custom_script(name_id_dict: dict[str, str], name: str, idx: int, scripts: list[CustomScript]):
     id_ = name_id_dict[name]
-    script_ids[idx] = id_
+    scripts[idx] = CustomScript.create(id_)
     return (
-        script_ids,
+        scripts,
         idx, 
         datetime.now(),
     )
 
 # カスタムスクリプトの追加
-def add_custom_script(script_ids: list[str], id_name_dict: dict[str, str]):
+def add_custom_script(scripts: list[CustomScript], id_name_dict: dict[str, str]):
     if len(id_name_dict.keys()) == 0:
         return []
-    script_ids += [tuple(id_name_dict.keys())[0]]
-    return script_ids, datetime.now()
+    scripts += [CustomScript.create(tuple(id_name_dict.keys())[0])]
+    return scripts, datetime.now()
 
 # カスタムスクリプトの保存
-def save_custom_scripts(script_ids: list[str]):
-    preferences.custom_scripts = script_ids
-    preferences.dump()
+def save_custom_scripts(scripts: list[CustomScript], *args: Any):
+    custom_script_group.scripts = scripts
+    args_idx = 0
+    for script in scripts:
+        script.kwargs = {}
+        for name in script.annotations.keys():
+            script.kwargs[name] = args[args_idx]
+            args_idx += 1            
+    custom_script_group.dump()
     gr.Info("Custom scripts updated.")
     return manual_sync()
 
@@ -268,7 +275,7 @@ def create_gradio_ui():
         # 設定
         with gr.Sidebar(width=720, open=not settings.has_root_dirs()):
             gr.Markdown("# Preferences")
-            gr.Markdown("## Basic settings")
+            gr.Markdown("## General settings")
             with gr.Row(equal_height=True):
                 gr_text_local_root: gr.Textbox = gr.Textbox(label="📁Local Folder", interactive=False)
                 gr_btn_open_local: gr.Button = gr.Button("Open", elem_id="button")
@@ -290,11 +297,11 @@ def create_gradio_ui():
 
             # カスタムスクリプト
             gr.Markdown("## Custom Scripts")
-            gr_state_script_ids = gr.State(None)
+            gr_state_scripts = gr.State(None)
             gr_state_refresh_scripts = gr.State(None)
             gr_state_selected_script = gr.State(None)
-            @gr.render(inputs=[gr_state_script_ids, gr_state_selected_script], triggers=[gr_state_refresh_scripts.change])
-            def render_custom_scripts(script_ids: list[str], selected_script: int):
+            @gr.render(inputs=[gr_state_scripts, gr_state_selected_script], triggers=[gr_state_refresh_scripts.change])
+            def render_custom_scripts(scripts: list[CustomScript], selected_script: int):
                 # IDと名前の対応表を取得
                 name_counts: dict[str, int] = {}
                 id_name_dict: dict[str, str] = {}
@@ -312,22 +319,19 @@ def create_gradio_ui():
                 gr_state_id_name_dict = gr.State(id_name_dict)
                 gr_state_name_id_dict = gr.State(name_id_dict)
                 # スクリプト一覧表示
-                for num, id_ in enumerate(script_ids):
-                    fn = load_main_function(id_)
-                    attr = CustomScriptAttributes.create(id_)
+                kwarg_components = []
+                for num, script in enumerate(scripts):
                     with gr.Group():
-                        gr_dd_script_name = gr.Dropdown(tuple(id_name_dict.values()), value=id_name_dict[id_], show_label=False, interactive=True)
+                        gr_dd_script_name = gr.Dropdown(tuple(id_name_dict.values()), value=id_name_dict[script.id_], show_label=False, interactive=True)
                         # docstring
                         with gr.Accordion("Description", open=num == selected_script) as gr_acc_script_description:
-                            text = get_plain_text(f"{inspect.getdoc(fn)}" if inspect.getdoc(fn) else "No Description.")
+                            text = get_plain_text(script.getdoc())
                             gr_md_script_description = gr.Markdown(text)
                         # arguments
-                        sig = inspect.signature(fn)
-                        annotations = get_type_hints(fn)
-                        with gr.Accordion("Arguments", visible=len(sig.parameters.items()) > 4, open=num == selected_script) as gr_acc_script_arguments:
-                            for name, param in islice(sig.parameters.items(), 4, None):
-                                annotation = annotations.get(name)
-                                gr_component = create_arg_component(annotation, name, param)
+                        with gr.Accordion("Arguments", visible=len(script.annotations) > 0, open=num == selected_script) as gr_acc_script_arguments:
+                            for name, default in script.default_values.items():
+                                annotation = script.annotations.get(name)
+                                kwarg_components.append(create_arg_component(annotation, name, default))
                     gr_state_script_index = gr.State(num)
                     # イベント
                     gr_dd_script_name.change(
@@ -336,10 +340,10 @@ def create_gradio_ui():
                             gr_state_name_id_dict, 
                             gr_dd_script_name, 
                             gr_state_script_index, 
-                            gr_state_script_ids,
+                            gr_state_scripts,
                         ],
                         outputs=[
-                            gr_state_script_ids,
+                            gr_state_scripts,
                             gr_state_selected_script, 
                             gr_state_refresh_scripts, 
                         ], 
@@ -347,12 +351,12 @@ def create_gradio_ui():
                     )
                 gr_btn_add_script.click(
                     add_custom_script, 
-                    inputs=[gr_state_script_ids, gr_state_id_name_dict],
-                    outputs=[gr_state_script_ids, gr_state_refresh_scripts]
+                    inputs=[gr_state_scripts, gr_state_id_name_dict],
+                    outputs=[gr_state_scripts, gr_state_refresh_scripts]
                 )
                 gr_btn_save_scripts.click(
                     save_custom_scripts, 
-                    inputs=gr_state_script_ids,
+                    inputs=[gr_state_scripts] + kwarg_components,
                     outputs=gr_state_refresh_dirs
                 )
             gr_btn_add_script: gr.Button = gr.Button("Add Script")
@@ -494,7 +498,7 @@ def create_gradio_ui():
                 gr_num_sync_freq_mins,
                 gr_num_hold_after_modified_days,
                 gr_num_hold_after_created_days,
-                gr_state_script_ids,
+                gr_state_scripts,
                 gr_state_refresh_dirs, 
                 gr_state_refresh_scripts
             ]

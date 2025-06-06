@@ -18,8 +18,7 @@ import inspect
 import re
 
 from config import settings
-from config.settings import preferences
-from scripts.custom_script import load_main_function, CustomScriptAttributes
+from config.settings import general_settings
 
 
 class SyncDirectory(BaseModel):
@@ -38,8 +37,8 @@ class SyncDirectory(BaseModel):
     def be_removed_at(self) -> datetime:
         created_at = datetime.combine(self.created_at.date(), time.min)
         modified_at = datetime.combine(self.modified_at.date(), time.min)
-        after_create = created_at + timedelta(days=preferences.hold_after_created_days)
-        after_modify = modified_at + timedelta(days=preferences.hold_after_modified_days)
+        after_create = created_at + timedelta(days=general_settings.hold_after_created_days)
+        after_modify = modified_at + timedelta(days=general_settings.hold_after_modified_days)
         removed_at = max(after_create, after_modify) + timedelta(days=1)
         return removed_at
 
@@ -58,6 +57,7 @@ class SyncDirectory(BaseModel):
         filename.write_text(yaml.dump(self, allow_unicode=True), encoding='utf8')
 
     def sync(self, dst: SyncDirectory):
+        from scripts.custom_script import CustomScript, custom_script_group
         now = datetime.now()
         logs: list[str] = []
         if dst.locked:
@@ -122,14 +122,13 @@ class SyncDirectory(BaseModel):
                 else:
                     removed_files.append(path_.relative_to(sync_remote.path_))
             # カスタムスクリプト実行
-            for script in preferences.custom_scripts:
-                attr: CustomScriptAttributes = CustomScriptAttributes.create(script)
-                print(f"Run custom script: {attr.name}")
-                main_fn = load_main_function(script)
+            for script_id in custom_script_group.custom_scripts:
+                script = CustomScript.create(script_id)
+                print(f"Run custom script: {script.attributes.name}")
                 print("--- docstring ---")
-                print(inspect.getdoc(main_fn) or "(None)")
+                print(script.getdoc())
                 print("--- run ---")
-                main_fn(self, sync_remote, modified_files, removed_files)
+                script.run(self, sync_remote, modified_files, removed_files)
                 print("--- end ---")
         # 削除チェック
         print(f'Will be removed at: {self.be_removed_at:%Y-%m-%d %H:%M}')

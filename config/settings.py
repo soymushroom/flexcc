@@ -16,10 +16,11 @@ os.makedirs(cache_dir, exist_ok=True)
 local_dump_filename: Path = cache_dir / f"local{root_dir_ext}"
 remote_dump_filename: Path = cache_dir / f"remote{root_dir_ext}"
 console_refresh_interval_sec: int = 15
-preferences_path: Path = Path('config') / 'preferences.yaml'
+general_settings_path: Path = Path('config') / 'general_settings.yaml'
+
 
 # ユーザー設定
-class Preferences(BaseModel):
+class GeneralSettings(BaseModel):
     """
     ユーザー設定を保持するクラス
     """
@@ -30,39 +31,39 @@ class Preferences(BaseModel):
     hold_after_created_days: int = 15
     hold_after_modified_days: int = 8
     server_port: int = 28541
-    custom_scripts: list[str] = []
-
 
     def dump(self) -> str:
         # 隠しファイル属性を解除
         FILE_ATTRIBUTE_HIDDEN = 0x2
-        attrs = ctypes.windll.kernel32.GetFileAttributesW(str(preferences_path))
+        attrs = ctypes.windll.kernel32.GetFileAttributesW(str(general_settings_path))
         if attrs & FILE_ATTRIBUTE_HIDDEN:
-            ctypes.windll.kernel32.SetFileAttributesW(str(preferences_path), attrs & ~FILE_ATTRIBUTE_HIDDEN)
+            ctypes.windll.kernel32.SetFileAttributesW(str(general_settings_path), attrs & ~FILE_ATTRIBUTE_HIDDEN)
         # 書き込み
-        preferences_path.write_text(yaml.dump(self, allow_unicode=True), encoding='utf8')
+        general_settings_path.write_text(yaml.dump(self, allow_unicode=True), encoding='utf8')
 
-def preferences_representer(dumper: yaml.Dumper, data: Preferences):
-    return dumper.represent_mapping("!Preferences", data.model_dump())
+def general_settings_representer(dumper: yaml.Dumper, data: GeneralSettings):
+    data_dict = data.model_dump(exclude={'custom_scripts'})
+    data_dict['custom_scripts'] = data.custom_scripts  # ここで CustomScript の representer が効く
+    return dumper.represent_mapping("!GeneralSettings", data_dict)
 
-def preferences_constructor(loader: yaml.Loader, node: yaml.MappingNode):
-    return Preferences(**loader.construct_mapping(node, deep=True))
+def general_settings_constructor(loader: yaml.Loader, node: yaml.MappingNode):
+    return GeneralSettings(**loader.construct_mapping(node, deep=True))
 
-yaml.add_representer(Preferences, preferences_representer)
-yaml.add_constructor("!Preferences", preferences_constructor)
+yaml.add_representer(GeneralSettings, general_settings_representer)
+yaml.add_constructor("!GeneralSettings", general_settings_constructor)
 
-# User Preferences
-preferences: Preferences
-if preferences_path.exists():
-    preferences = yaml.load(preferences_path.read_text(encoding='utf8'), Loader=yaml.Loader)
+# General Settings
+general_settings: GeneralSettings
+if general_settings_path.exists():
+    general_settings = yaml.load(general_settings_path.read_text(encoding='utf8'), Loader=yaml.Loader)
 else:
-    preferences = Preferences()
-    preferences.dump()
+    general_settings = GeneralSettings()
+    general_settings.dump()
 
 def has_root_dirs():
     return (
-        preferences.local_directory
-        and preferences.remote_directory
-        and preferences.local_directory.exists()
-        and preferences.remote_directory.exists()
+        general_settings.local_directory
+        and general_settings.remote_directory
+        and general_settings.local_directory.exists()
+        and general_settings.remote_directory.exists()
     )
