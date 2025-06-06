@@ -9,6 +9,10 @@ import os
 import inspect
 from glob import glob
 import html
+from typing import Literal, Any, get_type_hints, get_origin, get_args
+import re
+from itertools import islice
+import ulid
 
 from config import settings
 from config.settings import preferences
@@ -17,6 +21,20 @@ from backend import watch, scheduler
 from scripts.custom_script import load_main_function, CustomScriptAttributes
 
 # --- コールバック ---
+
+# セッション開始
+def start_session():
+    return (
+        str(preferences.local_directory),
+        str(preferences.remote_directory),
+        preferences.server_port,
+        preferences.sync_freq_minutes, 
+        preferences.hold_after_modified_days, 
+        preferences.hold_after_created_days, 
+        preferences.custom_scripts.copy(),
+        datetime.now(),
+        datetime.now(),
+    )
 
 # フォルダ選択
 def select_directory(default: str):
@@ -55,19 +73,92 @@ def apply_settings(local_root: str, remote_root: str, sync_every: int, hold_afte
 
 # プレーンテキスト取得
 def get_plain_text(text):
+    text = re.sub(r" *<hide>.*?</hide>(\n|)", "", text, flags=re.DOTALL)
     text = html.escape(text)
     return f"<pre>{text}</pre>"
+
+# 引数オブジェクトの表示
+def create_arg_component(annotation: Any, name, param: inspect.Parameter):
+    """
+    annotations: typing.get_type_hints() の戻り値 (引数名 → 型ヒント)
+    name: パラメータ名
+    param: inspect.signature(...).parameters[name] (inspect.Parameter オブジェクト)
+
+    対応する型ヒントに応じて、適切な Gradio コンポーネントを返す。
+    型ヒントとして扱うもの：
+      - str
+      - int
+      - float
+      - datetime.datetime
+      - list[Any]    （Any は str, int, float, datetime のいずれか）
+      - dict[str, Any]
+      - Literal[…]
+    """
+    origin = get_origin(annotation)
+    args = get_args(annotation)
+    kwargs = {
+        "label": name,
+        "value": None if param.default is inspect.Parameter.empty else param.default, 
+    }
+
+    # 1) Literal の場合
+    if origin is Literal:
+        # Literal["foo", "bar", ...] のように、args に指定値が入っている
+        choices = list(args)
+        return gr.Dropdown(
+            choices=choices,
+            interactive=True,
+            **kwargs
+        )
+
+    # 2) 単一の型 (origin が None)
+    if origin is None:
+        # annotation がそのまま型オブジェクトになっているケース
+        if annotation is str or annotation is Path:
+            return gr.Textbox(interactive=True, **kwargs)
+
+        if annotation is int:
+            # 整数専用なので precision=0
+            return gr.Number(precision=0, interactive=True, **kwargs)
+
+        if annotation is float:
+            return gr.Number(interactive=True, **kwargs)
+
+        if annotation is datetime:
+            # Gradio に組み込みの日時ピッカーがなければ Textbox で代用
+            # 入力例: "2025-06-05 14:30:00" のような ISO フォーマットを想定
+            return gr.DateTime(interactive=True, **kwargs)
+        
+        if annotation is bool:
+            return gr.Checkbox(interactive=True, **kwargs)
+
+    # 3) list[...] の場合
+    if origin is list:
+        # list[Any] を受け取るものとし、Any は str, int, float, datetime のいずれか
+        inner_type = args[0] if args else Any
+
+        # 例として「コンマ区切りで入力し、後でパースする」前提の Textbox を返す
+        placeholder = f"Enter comma-separated list of {inner_type.__name__}"
+        return gr.Textbox(placeholder=placeholder, interactive=True, **kwargs)
+
+    # 4) dict[str, Any] の場合
+    if origin is dict:
+        key_type, val_type = args if len(args) == 2 else (str, Any)
+        # Gradio の JSON コンポーネントを使って辞書を入力させる
+        return gr.JSON(interactive=True, **kwargs)
+
+    # 5) その他のケース（未対応）
+    raise ValueError(f"Unsupported annotation for '{name}': {annotation!r}")
+
 
 # カスタムスクリプトの割り当て
 def assign_custom_script(name_id_dict: dict[str, str], name: str, idx: int, script_ids: list[str]):
     id_ = name_id_dict[name]
-    fn = load_main_function(id_)
     script_ids[idx] = id_
-    description = get_plain_text(f"{inspect.getdoc(fn)}" if inspect.getdoc(fn) else "No Description.")
     return (
         script_ids,
-        gr.update(open=True),
-        description, 
+        idx, 
+        datetime.now(),
     )
 
 # カスタムスクリプトの追加
@@ -173,40 +264,37 @@ def create_gradio_ui():
     is_initial_call = True
     css = (Path("ui") / "console_main.css").read_text(encoding="utf8")
     with gr.Blocks(css=css) as demo:
-        gr_state_refresh_dirs = gr.State(False)
+        gr_state_refresh_dirs = gr.State(None)
         # 設定
         with gr.Sidebar(width=720, open=not settings.has_root_dirs()):
             gr.Markdown("# Preferences")
             gr.Markdown("## Basic settings")
             with gr.Row(equal_height=True):
-                gr_text_local: gr.Textbox = gr.Textbox(str(preferences.local_directory), label="📁Local Folder", interactive=False)
+                gr_text_local_root: gr.Textbox = gr.Textbox(label="📁Local Folder", interactive=False)
                 gr_btn_open_local: gr.Button = gr.Button("Open", elem_id="button")
             with gr.Row(equal_height=True):
-                gr_text_remote: gr.Textbox = gr.Textbox(str(preferences.remote_directory), label="☁️Remote Folder", interactive=False)
+                gr_text_remote_root: gr.Textbox = gr.Textbox(label="☁️Remote Folder", interactive=False)
                 gr_btn_open_remote: gr.Button = gr.Button("Open", elem_id="button")
             with gr.Row(equal_height=True):
                 gr_num_server_port: gr.Number = gr.Number(
-                    preferences.server_port, 
                     minimum=1, step=1, label="💻Console Server Port (from next launch)", interactive=True)
                 gr_num_sync_freq_mins: gr.Number = gr.Number(
-                    preferences.sync_freq_minutes, 
                     minimum=1, step=1, label="🔄️Sync Every [mins]", interactive=True)
             with gr.Row(equal_height=True):
                 gr_num_hold_after_modified_days: gr.Number = gr.Number(
-                    preferences.hold_after_modified_days, 
                     minimum=0, step=1, label="📝Remove Local After Modified [days]", interactive=True)
                 gr_num_hold_after_created_days: gr.Number = gr.Number(
-                    preferences.hold_after_created_days, 
                     minimum=0, step=1, label="📄Remove Local After Created [days]", interactive=True)
             # 設定ボタン
             gr_btn_apply_settings: gr.Button = gr.Button("Apply")
 
             # カスタムスクリプト
             gr.Markdown("## Custom Scripts")
-            gr_state_script_ids = gr.State(preferences.custom_scripts.copy())
-            gr_state_refresh_scripts = gr.State(False)
-            @gr.render(inputs=gr_state_script_ids, triggers=[gr_state_refresh_scripts.change])
-            def render_custom_scripts(script_ids: list[str]):
+            gr_state_script_ids = gr.State(None)
+            gr_state_refresh_scripts = gr.State(None)
+            gr_state_selected_script = gr.State(None)
+            @gr.render(inputs=[gr_state_script_ids, gr_state_selected_script], triggers=[gr_state_refresh_scripts.change])
+            def render_custom_scripts(script_ids: list[str], selected_script: int):
                 # IDと名前の対応表を取得
                 name_counts: dict[str, int] = {}
                 id_name_dict: dict[str, str] = {}
@@ -229,9 +317,17 @@ def create_gradio_ui():
                     attr = CustomScriptAttributes.create(id_)
                     with gr.Group():
                         gr_dd_script_name = gr.Dropdown(tuple(id_name_dict.values()), value=id_name_dict[id_], show_label=False, interactive=True)
-                        with gr.Accordion("Description", open=False) as gr_acc_script_description:
+                        # docstring
+                        with gr.Accordion("Description", open=num == selected_script) as gr_acc_script_description:
                             text = get_plain_text(f"{inspect.getdoc(fn)}" if inspect.getdoc(fn) else "No Description.")
                             gr_md_script_description = gr.Markdown(text)
+                        # arguments
+                        sig = inspect.signature(fn)
+                        annotations = get_type_hints(fn)
+                        with gr.Accordion("Arguments", visible=len(sig.parameters.items()) > 4, open=num == selected_script) as gr_acc_script_arguments:
+                            for name, param in islice(sig.parameters.items(), 4, None):
+                                annotation = annotations.get(name)
+                                gr_component = create_arg_component(annotation, name, param)
                     gr_state_script_index = gr.State(num)
                     # イベント
                     gr_dd_script_name.change(
@@ -244,8 +340,8 @@ def create_gradio_ui():
                         ],
                         outputs=[
                             gr_state_script_ids,
-                            gr_acc_script_description, 
-                            gr_md_script_description,
+                            gr_state_selected_script, 
+                            gr_state_refresh_scripts, 
                         ], 
                         show_progress=False, 
                     )
@@ -262,11 +358,11 @@ def create_gradio_ui():
             gr_btn_add_script: gr.Button = gr.Button("Add Script")
             gr_btn_save_scripts: gr.Button = gr.Button("Save Scripts")
         # イベント
-        gr_btn_open_local.click(select_directory, inputs=gr_text_local, outputs=gr_text_local)
-        gr_btn_open_remote.click(select_directory, inputs=gr_text_remote, outputs=gr_text_remote)
+        gr_btn_open_local.click(select_directory, inputs=gr_text_local_root, outputs=gr_text_local_root)
+        gr_btn_open_remote.click(select_directory, inputs=gr_text_remote_root, outputs=gr_text_remote_root)
         gr_btn_apply_settings.click(apply_settings, inputs=[
-            gr_text_local,
-            gr_text_remote,
+            gr_text_local_root,
+            gr_text_remote_root,
             gr_num_sync_freq_mins,
             gr_num_hold_after_created_days,
             gr_num_hold_after_modified_days,
@@ -389,5 +485,18 @@ def create_gradio_ui():
                         outputs=dir_indicators,
                         show_progress=False, 
                     )
-        demo.load(lambda: (datetime.now(), datetime.now()), outputs=[gr_state_refresh_dirs, gr_state_refresh_scripts])
+        demo.load(
+            start_session, 
+            outputs=[
+                gr_text_local_root, 
+                gr_text_remote_root,
+                gr_num_server_port,
+                gr_num_sync_freq_mins,
+                gr_num_hold_after_modified_days,
+                gr_num_hold_after_created_days,
+                gr_state_script_ids,
+                gr_state_refresh_dirs, 
+                gr_state_refresh_scripts
+            ]
+        )
         return demo
