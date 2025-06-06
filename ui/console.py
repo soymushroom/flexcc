@@ -79,7 +79,7 @@ def get_plain_text(text):
     return f"<pre>{text}</pre>"
 
 # 引数オブジェクトの表示
-def create_arg_component(annotation: Any, name, default: Any):
+def create_arg_component(annotation: Any, name, script: CustomScript, default: Any):
     """
     annotations: typing.get_type_hints() の戻り値 (引数名 → 型ヒント)
     name: パラメータ名
@@ -99,7 +99,7 @@ def create_arg_component(annotation: Any, name, default: Any):
     args = get_args(annotation)
     kwargs = {
         "label": name,
-        "value": default, 
+        "value": script.kwargs[name] if name in script.kwargs.keys() else default, 
     }
 
     # 1) Literal の場合
@@ -331,7 +331,7 @@ def create_gradio_ui():
                         with gr.Accordion("Arguments", visible=len(script.annotations) > 0, open=num == selected_script) as gr_acc_script_arguments:
                             for name, default in script.default_values.items():
                                 annotation = script.annotations.get(name)
-                                kwarg_components.append(create_arg_component(annotation, name, default))
+                                kwarg_components.append(create_arg_component(annotation, name, script, default))
                     gr_state_script_index = gr.State(num)
                     # イベント
                     gr_dd_script_name.change(
