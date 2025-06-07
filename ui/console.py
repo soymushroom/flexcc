@@ -20,6 +20,7 @@ from scripts.custom_script import custom_script_group
 from core.dirsync import LocalRootDirectory, RemoteRootDirectory, SyncDirectory
 from backend import watch, scheduler
 from scripts.custom_script import CustomScript, CustomScriptAttributes
+from util.text_util import get_plain_text
 
 # --- コールバック ---
 
@@ -81,11 +82,6 @@ def apply_settings(local_root: str, remote_root: str, sync_every: int, hold_afte
     gr.Info("General settings are updated.")
     return manual_sync()
 
-# プレーンテキスト取得
-def get_plain_text(text):
-    text = re.sub(r" *<hide>.*?</hide>(\n|)", "", text, flags=re.DOTALL)
-    text = html.escape(text)
-    return f"<pre>{text}</pre>"
 
 # 引数オブジェクトの表示
 def create_arg_component(annotation: Any, name, script: CustomScript, default: Any):

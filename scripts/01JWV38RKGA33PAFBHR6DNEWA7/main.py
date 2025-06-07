@@ -4,7 +4,7 @@ from typing import Literal
 
 
 def main(
-    local_sync: SyncDirectory, remote_sync: SyncDirectory, modified_files: list[Path], removed_files: list[Path], 
+    source_dir: SyncDirectory, dest_dir: SyncDirectory, modified_files: list[Path], removed_files: list[Path], 
     destination: Path, 
     extensions: str="jpg; jpeg; png; gif; bmp; webp; tiff; tif; heic; heif; ", 
     mode: Literal["percentage", "long_side", "short_side", "width", "height"]="percentage",
@@ -17,8 +17,8 @@ def main(
 
     Args:
         <hide>
-        local_sync (SyncDirectory): The local directory involved in synchronization.
-        remote_sync (SyncDirectory): The remote directory involved in synchronization.
+        source_dir (SyncDirectory): The source directory involved in synchronization.
+        dest_dir (SyncDirectory): The destination directory involved in synchronization.
         modified_files (list[Path]): A list of file paths that have been modified.
         removed_files (list[Path]): A list of file paths that have been removed.
         </hide>
@@ -50,8 +50,8 @@ def main(
             False の場合、元のサイズより拡大されることはない。
     """
     print("Script 3")
-    print(f"Local: {str(local_sync.path_)}")
-    print(f"Remote: {str(remote_sync.path_)}")
+    print(f"Local: {str(source_dir.path_)}")
+    print(f"Remote: {str(dest_dir.path_)}")
     print("Modified: ")
     if modified_files:
         for p in modified_files:

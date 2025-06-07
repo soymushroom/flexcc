@@ -19,6 +19,8 @@ import re
 
 from config import settings
 from config.settings import general_settings
+from util.text_util import enable_hide_tag
+from util.path_util import is_subpath
 
 
 class SyncDirectory(BaseModel):
@@ -96,10 +98,32 @@ class SyncDirectory(BaseModel):
         elif result.returncode == 0:
             print('No change')
         elif result.returncode:
+            # ファイル一覧取得
+            sync_log = result.stdout[1:-1].replace('\t', '')
+            print("Files will be synced: ")
+            print(sync_log)
+            pattern = re.compile(r" *(.*)")
+            paths = [Path(pattern.match(x).group(1)) for x in sync_log.split("\n")]
+            # 編集対象か削除対象かを判定（リモート配下のファイルなら削除対象）
+            modified_files, removed_files = [], []
+            for path_ in paths:
+                if is_subpath(self.path_, path_):
+                    modified_files.append(path_.relative_to(self.path_))
+                else:
+                    removed_files.append(path_.relative_to(dst.path_))
+            # カスタムスクリプト実行
+            for script in custom_script_group.scripts:
+                print(f"Run custom script: {script.attributes.name}")
+                print("--- docstring ---")
+                print(enable_hide_tag(script.getdoc()))
+                print("--- run ---")
+                script.run(self, dst, modified_files, removed_files)
+                print("--- end ---")
             # ミラーリング実行
             copy_command = [c for c in command if c != '/L']
             result = subprocess.run(copy_command, capture_output=True, text=True, shell=True)
             sync_log = result.stdout[1:-1].replace('\t', '')
+            print("Actually have been synced: ")
             print(sync_log)
             # 結果更新
             logs.append(f'Sync: {self.path_.stem}\n{sync_log}')
@@ -110,28 +134,8 @@ class SyncDirectory(BaseModel):
         self.dump()
         shutil.copy2(self.path_ / settings.sync_dir_ext, dst.path_ / settings.sync_dir_ext)
         sync_remote = SyncDirectory.create(dst.path_)
-        # 同期実行後処理
-        if sync_log is not None:
-            # ファイル一覧取得
-            pattern = re.compile(r" *(.*)")
-            paths = [Path(pattern.match(x).group(1)) for x in sync_log.split("\n")]
-            modified_files, removed_files = [], []
-            for path_ in paths:
-                if path_.exists():
-                    modified_files.append(path_.relative_to(self.path_))
-                else:
-                    removed_files.append(path_.relative_to(sync_remote.path_))
-            # カスタムスクリプト実行
-            for script in custom_script_group.scripts:
-                print(f"Run custom script: {script.attributes.name}")
-                print("--- docstring ---")
-                print(script.getdoc())
-                print("--- run ---")
-                script.run(self, sync_remote, modified_files, removed_files)
-                print("--- end ---")
         # 削除チェック
-        print(f'Will be removed at: {self.be_removed_at:%Y-%m-%d %H:%M}')
-        print(f'Now: {now:%Y-%m-%d %H:%M}')
+        print(f'Local will be removed at: {self.be_removed_at:%Y-%m-%d %H:%M}')
         if (now > self.be_removed_at):
             # リモートをロックして自身を削除
             sync_remote.locked = True
@@ -186,7 +190,7 @@ class RootDirectory(BaseModel, ABC):
         for dir in dirs:
             sdir = SyncDirectory.create(path_=dir)
             self.sync_directories.append(sdir)
-            print(f'{dir.stem}: {sdir.id_} (recent modify: {sdir.modified_at:%Y-%m-%d %H:%M:%S})')
+            print(f'{dir.stem}: {sdir.id_}')
     
 
     def dump(self, filename: Path) -> str:

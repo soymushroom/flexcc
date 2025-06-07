@@ -21,8 +21,9 @@ class CustomScriptAttributes(BaseModel):
     favorite: bool = False
     name: str = ""
     star: int = 0
+    category: Literal["general", "text", "image", "audio", "video"] = "general"
     tags: list[str] = []
-    version: int = 1
+    version: list[int] = [0, 1, 0]
 
     @classmethod
     def create(cls, id_: str) -> 'CustomScriptAttributes':

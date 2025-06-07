@@ -1,8 +1,12 @@
 !CustomScriptAttributes
 author: "soymushroom"
 favorite: false
-name: "Resize image backup"
+name: "Image Resize & Backup"
 star: 0
+category: "image"
 tags:
 - "image"
-version: 1
+version: 
+- 0
+- 1
+- 0
