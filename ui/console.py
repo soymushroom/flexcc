@@ -37,10 +37,19 @@ def start_session():
         datetime.now(),
     )
 
+# ファイル選択
+def select_file(default: str, style: int=wx.FD_DEFAULT_STYLE):
+    file = default
+    dialog = wx.FileDialog(None, "Select File", style=style)
+    if dialog.ShowModal() == wx.ID_OK:
+        file = dialog.GetPath()
+    dialog.Destroy()
+    return file
+
 # フォルダ選択
-def select_directory(default: str):
+def select_directory(default: str, style: int=wx.DD_DEFAULT_STYLE):
     folder = default
-    dialog = wx.DirDialog(None, "フォルダを選択してください", style=wx.DD_DIR_MUST_EXIST)
+    dialog = wx.DirDialog(None, "Select Folder", style=style)
     if dialog.ShowModal() == wx.ID_OK:
         folder = dialog.GetPath()
     dialog.Destroy()
@@ -115,21 +124,23 @@ def create_arg_component(annotation: Any, name, script: CustomScript, default: A
     # 2) 単一の型 (origin が None)
     if origin is None:
         # annotation がそのまま型オブジェクトになっているケース
-        if annotation is str or annotation is Path:
+        if annotation is str:
             return gr.Textbox(interactive=True, **kwargs)
-
+        if annotation is Path:
+            with gr.Row(equal_height=False, elem_id="row-bottom") as row:
+                tb = gr.Textbox(interactive=True, **kwargs, scale=5)
+                btn_file = gr.Button("📄 file", elem_id="button-icon")
+                btn_dir = gr.Button("📁 folder", elem_id="button-icon")
+            btn_file.click(lambda x: select_file(x, wx.FD_DEFAULT_STYLE), inputs=tb, outputs=tb)
+            btn_dir.click(lambda x: select_directory(x, wx.DD_DEFAULT_STYLE), inputs=tb, outputs=tb)
+            return tb
         if annotation is int:
             # 整数専用なので precision=0
             return gr.Number(precision=0, interactive=True, **kwargs)
-
         if annotation is float:
             return gr.Number(interactive=True, **kwargs)
-
         if annotation is datetime:
-            # Gradio に組み込みの日時ピッカーがなければ Textbox で代用
-            # 入力例: "2025-06-05 14:30:00" のような ISO フォーマットを想定
             return gr.DateTime(interactive=True, **kwargs)
-        
         if annotation is bool:
             return gr.Checkbox(interactive=True, **kwargs)
 
@@ -137,7 +148,6 @@ def create_arg_component(annotation: Any, name, script: CustomScript, default: A
     if origin is list:
         # list[Any] を受け取るものとし、Any は str, int, float, datetime のいずれか
         inner_type = args[0] if args else Any
-
         # 例として「コンマ区切りで入力し、後でパースする」前提の Textbox を返す
         placeholder = f"Enter comma-separated list of {inner_type.__name__}"
         return gr.Textbox(placeholder=placeholder, interactive=True, **kwargs)
@@ -169,15 +179,25 @@ def add_custom_script(scripts: list[CustomScript], id_name_dict: dict[str, str])
     scripts += [CustomScript.create(tuple(id_name_dict.keys())[0])]
     return scripts, datetime.now()
 
+# カスタムスクリプトの削除
+def remove_custom_script(scripts: list[CustomScript], index_: int):
+    script: CustomScript = scripts.pop(index_)
+    print(f"Script {index_}[ {script.attributes.name} ] was removed.")
+    return scripts, datetime.now()
+
 # カスタムスクリプトの保存
 def save_custom_scripts(scripts: list[CustomScript], *args: Any):
-    custom_script_group.scripts = scripts
+    custom_script_group.scripts = scripts.copy()
     args_idx = 0
     for script in scripts:
         script.kwargs = {}
-        for name in script.annotations.keys():
-            script.kwargs[name] = args[args_idx]
-            args_idx += 1            
+        for name in script.default_values.keys():
+            arg = args[args_idx]
+            annotation = script.annotations.get(name, str)  # 型ヒント取得
+            if get_origin(annotation) is Literal:
+                annotation = str
+            script.kwargs[name] = annotation(arg)
+            args_idx += 1
     custom_script_group.dump()
     gr.Info("Custom scripts updated.")
     return manual_sync()
@@ -277,10 +297,10 @@ def create_gradio_ui():
             gr.Markdown("# Preferences")
             gr.Markdown("## General settings")
             with gr.Row(equal_height=True):
-                gr_text_local_root: gr.Textbox = gr.Textbox(label="📁Local Folder", interactive=False)
+                gr_text_local_root: gr.Textbox = gr.Textbox(label="📁Local Folder", interactive=True)
                 gr_btn_open_local: gr.Button = gr.Button("Open", elem_id="button")
             with gr.Row(equal_height=True):
-                gr_text_remote_root: gr.Textbox = gr.Textbox(label="☁️Remote Folder", interactive=False)
+                gr_text_remote_root: gr.Textbox = gr.Textbox(label="☁️Remote Folder", interactive=True)
                 gr_btn_open_remote: gr.Button = gr.Button("Open", elem_id="button")
             with gr.Row(equal_height=True):
                 gr_num_server_port: gr.Number = gr.Number(
@@ -293,7 +313,7 @@ def create_gradio_ui():
                 gr_num_hold_after_created_days: gr.Number = gr.Number(
                     minimum=0, step=1, label="📄Remove Local After Created [days]", interactive=True)
             # 設定ボタン
-            gr_btn_apply_settings: gr.Button = gr.Button("Apply")
+            gr_btn_apply_settings: gr.Button = gr.Button("Apply", elem_id="button-apply")
 
             # カスタムスクリプト
             gr.Markdown("## Custom Scripts")
@@ -324,14 +344,16 @@ def create_gradio_ui():
                     with gr.Group():
                         gr_dd_script_name = gr.Dropdown(tuple(id_name_dict.values()), value=id_name_dict[script.id_], show_label=False, interactive=True)
                         # docstring
-                        with gr.Accordion("Description", open=num == selected_script) as gr_acc_script_description:
+                        with gr.Accordion("💡 Description", open=num == selected_script) as gr_acc_script_description:
                             text = get_plain_text(script.getdoc())
                             gr_md_script_description = gr.Markdown(text)
                         # arguments
-                        with gr.Accordion("Arguments", visible=len(script.annotations) > 0, open=num == selected_script) as gr_acc_script_arguments:
+                        with gr.Accordion("🧩 Arguments", visible=len(script.default_values) > 0, open=num == selected_script) as gr_acc_script_arguments:
                             for name, default in script.default_values.items():
                                 annotation = script.annotations.get(name)
                                 kwarg_components.append(create_arg_component(annotation, name, script, default))
+                        with gr.Accordion("🗑️ Remove Script", open=False):
+                            gr_btn_del_script = gr.Button("Remove", elem_id="button-del")
                     gr_state_script_index = gr.State(num)
                     # イベント
                     gr_dd_script_name.change(
@@ -349,6 +371,11 @@ def create_gradio_ui():
                         ], 
                         show_progress=False, 
                     )
+                    gr_btn_del_script.click(
+                        remove_custom_script, 
+                        inputs=[gr_state_scripts, gr_state_script_index],
+                        outputs=[gr_state_scripts, gr_state_refresh_scripts]
+                    )
                 gr_btn_add_script.click(
                     add_custom_script, 
                     inputs=[gr_state_scripts, gr_state_id_name_dict],
@@ -360,10 +387,10 @@ def create_gradio_ui():
                     outputs=gr_state_refresh_dirs
                 )
             gr_btn_add_script: gr.Button = gr.Button("Add Script")
-            gr_btn_save_scripts: gr.Button = gr.Button("Save Scripts")
+            gr_btn_save_scripts: gr.Button = gr.Button("Save Scripts", elem_id="button-apply")
         # イベント
-        gr_btn_open_local.click(select_directory, inputs=gr_text_local_root, outputs=gr_text_local_root)
-        gr_btn_open_remote.click(select_directory, inputs=gr_text_remote_root, outputs=gr_text_remote_root)
+        gr_btn_open_local.click(lambda x: select_directory(x, wx.DD_DIR_MUST_EXIST), inputs=gr_text_local_root, outputs=gr_text_local_root)
+        gr_btn_open_remote.click(lambda x: select_directory(x, wx.DD_DIR_MUST_EXIST), inputs=gr_text_remote_root, outputs=gr_text_remote_root)
         gr_btn_apply_settings.click(apply_settings, inputs=[
             gr_text_local_root,
             gr_text_remote_root,
@@ -374,7 +401,7 @@ def create_gradio_ui():
         ], outputs=gr_state_refresh_dirs)
 
         # 同期ボタン
-        gr_btn_sync = gr.Button("Sync Manually")
+        gr_btn_sync = gr.Button("Sync Manually", elem_id="button-apply")
         gr_btn_sync.click(manual_sync, outputs=gr_state_refresh_dirs)
         # フォルダビューワー
         gr_timer = gr.Timer(settings.console_refresh_interval_sec)

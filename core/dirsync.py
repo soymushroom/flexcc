@@ -122,8 +122,7 @@ class SyncDirectory(BaseModel):
                 else:
                     removed_files.append(path_.relative_to(sync_remote.path_))
             # カスタムスクリプト実行
-            for script_id in custom_script_group.custom_scripts:
-                script = CustomScript.create(script_id)
+            for script in custom_script_group.scripts:
                 print(f"Run custom script: {script.attributes.name}")
                 print("--- docstring ---")
                 print(script.getdoc())

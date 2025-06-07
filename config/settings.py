@@ -42,9 +42,7 @@ class GeneralSettings(BaseModel):
         general_settings_path.write_text(yaml.dump(self, allow_unicode=True), encoding='utf8')
 
 def general_settings_representer(dumper: yaml.Dumper, data: GeneralSettings):
-    data_dict = data.model_dump(exclude={'custom_scripts'})
-    data_dict['custom_scripts'] = data.custom_scripts  # ここで CustomScript の representer が効く
-    return dumper.represent_mapping("!GeneralSettings", data_dict)
+    return dumper.represent_mapping("!GeneralSettings", data.model_dump())
 
 def general_settings_constructor(loader: yaml.Loader, node: yaml.MappingNode):
     return GeneralSettings(**loader.construct_mapping(node, deep=True))

@@ -6,6 +6,7 @@ from typing import Literal
 def main(
     local_sync: SyncDirectory, remote_sync: SyncDirectory, modified_files: list[Path], removed_files: list[Path], 
     destination: Path, 
+    extensions: str="jpg; jpeg; png; gif; bmp; webp; tiff; tif; heic; heif; ", 
     mode: Literal["percentage", "long_side", "short_side", "width", "height"]="percentage",
     value: int=100,
     jpeg_quality: int=92, 
@@ -22,7 +23,12 @@ def main(
         removed_files (list[Path]): A list of file paths that have been removed.
         </hide>
         destination (pathlib.Path):
-            リサイズされた画像を保存するフォルダ。
+            リサイズされた画像を保存するフォルダを指定する。
+        
+        extensions (str): 
+            対象とする画像ファイルの拡張子をセミコロン区切りで指定する。
+            大文字小文字は区別しない。
+            例: jpg;jpeg;png;
 
         mode (Literal["percentage", "long_side", "short_side", "width", "height"]): 
             リサイズ方法を指定するモード。

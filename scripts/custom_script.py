@@ -90,7 +90,7 @@ class CustomScript(BaseModel):
         default_values = {}
         for name, param in parameters:
             default_values[name] = None if param.default is inspect.Parameter.empty else param.default
-        annotations = dict(list(get_type_hints(fn).items())[4:])
+        annotations = dict(get_type_hints(fn).items())
         instance = CustomScript(
             id_=id_,
             fn=fn,
@@ -143,7 +143,7 @@ yaml.add_representer(CustomScript, custom_script_representer)
 yaml.add_constructor("!CustomScript", custom_script_constructor)
 
 
-# スクリプトのまとまり
+# スクリプト設定ファイル
 custom_script_group_path: Path = Path('config') / 'custom_script_group.yaml'
 class CustomScriptGroup(BaseModel):
     """
@@ -185,26 +185,4 @@ if custom_script_group_path.exists():
 else:
     custom_script_group = CustomScriptGroup()
     custom_script_group.dump()
-
-
-def main():
-    main_fn = CustomScript.create("01JWRCPA1E6C24YV81X9CWCWNZ").fn
-
-    print("=== Docstring ===")
-    print(inspect.getdoc(main_fn) or "None")
-    print()
-
-    print("=== Arguments ===")
-    sig = inspect.signature(main_fn)
-    type_hints = get_type_hints(main_fn)
-    for name, param in sig.parameters.items():
-        annotation = type_hints.get(name, param.annotation)
-        print(f"- Name: {name}")
-        print(f"  Type: {annotation}")
-    print()
-
-    print("=== Run ===")
-    main_fn([Path("app.py"), Path("ui") / "console.py"], [])
-
-if __name__ == "__main__":
-    main()
+    
