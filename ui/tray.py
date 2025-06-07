@@ -2,7 +2,7 @@ from PIL import Image, ImageDraw
 from pystray import Icon, MenuItem, Menu
 import webbrowser
 
-from config.settings import preferences
+from config.settings import general_settings
 
 
 # アイコン用画像作成
@@ -14,7 +14,7 @@ def create_icon_image():
 
 
 # pystrayタスク（同期関数）
-port = preferences.ServerPort
+port = general_settings.server_port
 def create_tray_icon():
     def on_exit(icon, item):
         icon.stop()
