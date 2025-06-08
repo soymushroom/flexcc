@@ -1,11 +1,10 @@
 !CustomScriptAttributes
 author: "soymushroom"
 favorite: false
-name: "Image Resize & Backup"
+name: "Archive Before Removal"
 star: 0
-category: "image"
+category: "general"
 tags:
-- "image"
 - "backup"
 version: 
 - 0

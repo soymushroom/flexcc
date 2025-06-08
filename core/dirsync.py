@@ -66,16 +66,7 @@ class SyncDirectory(BaseModel):
             # ロックされているフォルダなら中断
             print(f'\nLocked Remote: {dst.path_.stem}\nSync skipped')
             return
-        if dst.path_.stem != self.path_.stem:
-            # ローカルに合わせてリモートフォルダをリネーム
-            new_dst_path = dst.path_.parent / self.path_.stem
-            os.rename(dst.path_, new_dst_path)
-            log = f'Rename remote: \n{dst.path_} \n > {new_dst_path}'
-            dst.path_ = new_dst_path
-            print(f'\n{log}')
-            logs.append(log)
-            self.modified_at = now
-        # 同期確認
+        # 初期化
         self.synced_at = now
         command: list = [
             "robocopy",
@@ -93,11 +84,16 @@ class SyncDirectory(BaseModel):
         print(f'\nSync: {self.path_.stem}')
         result = subprocess.run(command, capture_output=True, text=True, shell=True)
         sync_log = None
+        do_rename = dst.path_.stem != self.path_.stem  # リネーム実行要否
+        do_sync = False  # 同期実行要否
+        # 同期実行可否チェック
+        modified_files, removed_files = [], []
         if result.returncode > 7:
             print('Error')
         elif result.returncode == 0:
             print('No change')
         elif result.returncode:
+            do_sync = True
             # ファイル一覧取得
             sync_log = result.stdout[1:-1].replace('\t', '')
             print("Files will be synced: ")
@@ -105,13 +101,13 @@ class SyncDirectory(BaseModel):
             pattern = re.compile(r" *(.*)")
             paths = [Path(pattern.match(x).group(1)) for x in sync_log.split("\n")]
             # 編集対象か削除対象かを判定（リモート配下のファイルなら削除対象）
-            modified_files, removed_files = [], []
             for path_ in paths:
                 if is_subpath(self.path_, path_):
                     modified_files.append(path_.relative_to(self.path_))
                 else:
                     removed_files.append(path_.relative_to(dst.path_))
-            # カスタムスクリプト実行
+        # カスタムスクリプト実行
+        if do_rename or do_sync:
             for script in custom_script_group.scripts:
                 print(f"Run custom script: {script.attributes.name}")
                 print("--- docstring ---")
@@ -119,21 +115,34 @@ class SyncDirectory(BaseModel):
                 print("--- run ---")
                 script.run(self, dst, modified_files, removed_files)
                 print("--- end ---")
-            # ミラーリング実行
-            copy_command = [c for c in command if c != '/L']
-            result = subprocess.run(copy_command, capture_output=True, text=True, shell=True)
+        # ローカルに合わせてリモートフォルダをリネーム
+        dst_path = dst.path_
+        if do_rename:
+            dst_path = dst.path_.parent / self.path_.stem
+            os.rename(dst.path_, dst_path)
+            log = f'Rename remote: \n{dst.path_} \n > {dst_path}'
+            print(f'\n{log}')
+            logs.append(log)
+            self.modified_at = now
+        # ミラーリング実行
+        if do_sync:
+            command[2] = dst_path  # 同期先を更新（リネーム対応）
+            command = [c for c in command if c != '/L']
+            print("Sync Start")
+            result = subprocess.run(command, capture_output=True, text=True, shell=True)
             sync_log = result.stdout[1:-1].replace('\t', '')
-            print("Actually have been synced: ")
-            print(sync_log)
+            print(f"Completed: Synced {len(sync_log.split("\n"))} files")
             # 結果更新
             logs.append(f'Sync: {self.path_.stem}\n{sync_log}')
             self.modified_at = now
+        else:
+            print('Not synced')
         # 同期ログ出力
         if logs:
             self.modify_log = '\n\n'.join(logs)
         self.dump()
-        shutil.copy2(self.path_ / settings.sync_dir_ext, dst.path_ / settings.sync_dir_ext)
-        sync_remote = SyncDirectory.create(dst.path_)
+        shutil.copy2(self.path_ / settings.sync_dir_ext, dst_path / settings.sync_dir_ext)
+        sync_remote = SyncDirectory.create(dst_path)
         # 削除チェック
         print(f'Local will be removed at: {self.be_removed_at:%Y-%m-%d %H:%M}')
         if (now > self.be_removed_at):

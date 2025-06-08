@@ -173,7 +173,7 @@ def add_custom_script(scripts: list[CustomScript], id_name_dict: dict[str, str])
     if len(id_name_dict.keys()) == 0:
         return []
     scripts += [CustomScript.create(tuple(id_name_dict.keys())[0])]
-    return scripts, datetime.now()
+    return scripts, len(scripts) - 1, datetime.now()
 
 # カスタムスクリプトの削除
 def remove_custom_script(scripts: list[CustomScript], index_: int):
@@ -375,7 +375,7 @@ def create_gradio_ui():
                 gr_btn_add_script.click(
                     add_custom_script, 
                     inputs=[gr_state_scripts, gr_state_id_name_dict],
-                    outputs=[gr_state_scripts, gr_state_refresh_scripts]
+                    outputs=[gr_state_scripts, gr_state_selected_script, gr_state_refresh_scripts]
                 )
                 gr_btn_save_scripts.click(
                     save_custom_scripts, 
