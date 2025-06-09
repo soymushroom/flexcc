@@ -13,4 +13,4 @@ wheels/
 cache/
 
 # preference file
-config/preferences.yaml
+config/

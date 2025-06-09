@@ -11,3 +11,30 @@
     width: 180px !important;
     flex: none !important;
 }
+#button-icon, #button-icon * {
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: 16px !important;
+    min-width: 10px !important;
+    min-height: 30px !important;
+    width: 50px !important;
+}
+#row-bottom, #row-bottom * {
+    align-items: center !important;
+}
+#button-del, #button-del * {
+    background-color: #e53935 !important; /* 赤色 */
+    color: white !important;
+    border: none !important;
+}
+#button-del:hover, #button-del:hover * {
+    background-color: #c62828 !important; /* ホバー時：濃い赤 */
+}
+#button-apply, #button-apply * {
+    background-color: #43a047 !important; /* 通常時：緑 */
+    color: white !important;
+    border: none !important;
+}
+#button-apply:hover, #button-apply:hover * {
+    background-color: #2e7d32 !important; /* ホバー時：濃い緑 */
+}
