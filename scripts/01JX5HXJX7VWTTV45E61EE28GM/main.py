@@ -4,46 +4,36 @@ from tqdm import tqdm
 import shutil
 
 
-def main(
+def main(# --- DO NOT DELETE | 削除厳禁: System Reserved ---
     source_dir: SyncDirectory, dest_dir: SyncDirectory, modified_files: list[Path], removed_files: list[Path], 
+    # --- END ---
     archive_to: Path, 
     extensions: str="*"
 ):
-    """
-    同期によって削除対象になったリモートファイルを、指定したフォルダへ退避します。
+    '''同期によって削除対象になったリモートファイルを指定したフォルダへ退避します。
 
-    Args:
-        <hide>
-        source_dir (SyncDirectory): The source directory involved in synchronization.
-        dest_dir (SyncDirectory): The destination directory involved in synchronization.
-        modified_files (list[Path]): A list of file paths(relative) that have been modified.
-        removed_files (list[Path]): A list of file paths(relative) that have been removed.
-        </hide>
-        destination (pathlib.Path):
-            削除対象のファイルを退避させるフォルダを指定する。
-        
-        extensions (str): 
-            対象とする画像ファイルの拡張子をセミコロン区切りで指定する。
-            大文字小文字は区別しない。
-            * ですべての拡張子を対象とする。
-            例: jpg;jpeg;png;
-    """
-    print("Script 3")
-    print(f"Local: {str(source_dir.path_)}")
-    print(f"Remote: {str(dest_dir.path_)}")
-    print("Modified: ")
-    if modified_files:
-        for p in modified_files:
-            print(f"  {str(p)}")
-    else:
-        print("  None")
-    print("Removed: ")
-    if removed_files:
-        for p in removed_files:
-            print(f"  {str(p)}")
-    else:
-        print("  None")
-
+    Parameters
+    ----------
+    <hide>
+    # System-reserved
+    source_dir : SyncDirectory
+        同期を実行する際に同期元となるフォルダ。
+    dest_dir : SyncDirectory
+        同期を実行する際に同期先となるフォルダ。
+    modified_files : list[Path]
+        同期を実行する際に変更または追加されるファイルのリスト。
+    removed_files : list[Path]
+        同期を実行する際に削除されるファイルのリスト。
+    # End System-reserved
+    </hide>
+    archive_to : Path
+        削除対象のファイルを退避させるフォルダを指定する。
+    extensions : str, optional
+        対象とする画像ファイルの拡張子をセミコロン区切りで指定する。規定値は "*"。
+        大文字小文字は区別しない。"*" ですべての拡張子を対象とする。
+        例: jpg;jpeg;png;
+    '''
+    
     # 拡張子判定
     if "*" in extensions:
         archived_paths = removed_files
@@ -64,15 +54,13 @@ def main(
 
     # アーカイブ
     if len(archived_paths) > 0:
-        print("Resize files: ")
+        print("Archive files: ")
         with tqdm(archived_paths) as pbar:
             for archived_path in pbar:
                 pbar.set_description(f"{archived_path.name}")
 
-                # 保存先ファイルパスを構築
-                output_path = archive_to / source_dir.path_.stem / archived_path
-                output_path.parent.mkdir(parents=True, exist_ok=True)
-
                 # コピー
-                source_path = source_dir.path_ / archived_path
-                shutil.copy2(source_path, output_path)
+                copy_from = dest_dir.path_ / archived_path
+                copy_to = archive_to / source_dir.path_.stem / archived_path
+                copy_to.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(copy_from, copy_to)

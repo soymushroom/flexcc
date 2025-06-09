@@ -5,8 +5,9 @@ from PIL import Image
 from tqdm import tqdm
 
 
-def main(
+def main(# --- DO NOT DELETE | 削除厳禁: System Reserved ---
     source_dir: SyncDirectory, dest_dir: SyncDirectory, modified_files: list[Path], removed_files: list[Path], 
+    # --- END ---
     export_to: Path, 
     extensions: str="jpg; jpeg; png; gif; bmp; webp; tiff; tif; heic; heif; ", 
     mode: Literal["percentage", "long_side", "short_side", "width", "height"]="percentage",
@@ -14,43 +15,44 @@ def main(
     jpeg_quality: int=92, 
     allow_enlarge: bool=False
 ):
-    """
-    画像ファイルをリサイズして指定したフォルダにバックアップします。
+    '''画像ファイルをリサイズして指定したフォルダにバックアップします。
 
-    Args:
-        <hide>
-        source_dir (SyncDirectory): The source directory involved in synchronization.
-        dest_dir (SyncDirectory): The destination directory involved in synchronization.
-        modified_files (list[Path]): A list of file paths(relative) that have been modified.
-        removed_files (list[Path]): A list of file paths(relative) that have been removed.
-        </hide>
-        export_to (pathlib.Path):
-            リサイズされた画像を保存するフォルダを指定する。
-        
-        extensions (str): 
-            対象とする画像ファイルの拡張子をセミコロン区切りで指定する。
-            大文字小文字は区別しない。
-            例: jpg;jpeg;png;
+    Parameters
+    ----------
+    <hide>
+    # System-reserved
+    source_dir : SyncDirectory
+        同期を実行する際に同期元となるフォルダ。
+    dest_dir : SyncDirectory
+        同期を実行する際に同期先となるフォルダ。
+    modified_files : list[Path]
+        同期を実行する際に変更または追加されるファイルのリスト。
+    removed_files : list[Path]
+        同期を実行する際に削除されるファイルのリスト。
+    # End System-reserved
+    </hide>
+    export_to : Path
+        リサイズされた画像を保存するフォルダを指定する。
+    extensions : str, optional
+        対象とする画像ファイルの拡張子をセミコロン区切りで指定する。
+        規定値は "jpg; jpeg; png; gif; bmp; webp; tiff; tif; heic; heif; "。
+        大文字小文字は区別しない。
+        例: jpg;jpeg;png;
+    mode : Literal[”percentage”, ”long_side”, ”short_side”, ”width”, ”height”], optional
+        リサイズ方法を指定するモード。規定値は "percentage"。
+        - 'percentage': 画像全体を指定されたパーセンテージでリサイズ。
+        - 'long_side': 長辺を value に合わせてリサイズ（短辺は比率を維持）。
+        - 'short_side': 短辺を value に合わせてリサイズ（長辺は比率を維持）。
+        - 'width': 幅を value に固定、高さは比率で調整。
+        - 'height': 高さを value に固定、幅は比率で調整。
+    value : int, optional
+        指定された mode に応じたリサイズの基準値。規定値は 100。
+    jpeg_quality : int, optional
+        JPEG 保存時の品質。規定値は 92。
+    allow_enlarge : bool, optional
+        元の大きさより拡大することを許容する。規定値は False。
+    '''
 
-        mode (Literal["percentage", "long_side", "short_side", "width", "height"]): 
-            リサイズ方法を指定するモード。
-            - "percentage": 画像全体を指定された割合でリサイズ。
-            - "long_side": 長辺を value に合わせてリサイズ（短辺は比率を維持）。
-            - "short_side": 短辺を value に合わせてリサイズ（長辺は比率を維持）。
-            - "width": 幅を value に固定、高さは比率で調整。
-            - "height": 高さを value に固定、幅は比率で調整。
-
-        value (int): 
-            指定された mode に応じたリサイズの基準値。
-            例: mode="percentage" の場合は割合(%)、mode="width" の場合はピクセル単位の幅など。
-
-        jpeg_quality (int): 
-            Jpeg保存時の品質。
-
-        allow_enlarge (bool): 
-            True にすると、元のサイズより大きくリサイズすることを許可する。
-            False の場合、元のサイズより拡大されることはない。
-    """
     extensions = extensions.lower().replace(" ", "").split(";")
     modified_img_paths = [f for f in modified_files if f.suffix[1:].lower() in extensions]
     removed_img_paths = [f for f in removed_files if f.suffix[1:].lower() in extensions]
