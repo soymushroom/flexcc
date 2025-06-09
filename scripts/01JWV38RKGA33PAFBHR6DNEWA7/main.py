@@ -9,13 +9,13 @@ def main(# --- DO NOT DELETE | 削除厳禁: System Reserved ---
     source_dir: SyncDirectory, dest_dir: SyncDirectory, modified_files: list[Path], removed_files: list[Path], 
     # --- END ---
     export_to: Path, 
-    extensions: str="jpg; jpeg; png; gif; bmp; webp; tiff; tif; heic; heif; ", 
-    mode: Literal["percentage", "long_side", "short_side", "width", "height"]="percentage",
+    extensions: str='jpg; jpeg; png; gif; bmp; webp; tiff; tif; heic; heif; ', 
+    mode: Literal['percentage', 'long_side', 'short_side', 'width', 'height']='percentage',
     value: int=100,
     jpeg_quality: int=92, 
     allow_enlarge: bool=False
 ):
-    '''画像ファイルをリサイズして指定したフォルダにバックアップします。
+    """画像ファイルをリサイズして指定したフォルダにバックアップします。
 
     Parameters
     ----------
@@ -35,11 +35,11 @@ def main(# --- DO NOT DELETE | 削除厳禁: System Reserved ---
         リサイズされた画像を保存するフォルダを指定する。
     extensions : str, optional
         対象とする画像ファイルの拡張子をセミコロン区切りで指定する。
-        規定値は "jpg; jpeg; png; gif; bmp; webp; tiff; tif; heic; heif; "。
+        規定値は 'jpg; jpeg; png; gif; bmp; webp; tiff; tif; heic; heif; '。
         大文字小文字は区別しない。
         例: jpg;jpeg;png;
-    mode : Literal[”percentage”, ”long_side”, ”short_side”, ”width”, ”height”], optional
-        リサイズ方法を指定するモード。規定値は "percentage"。
+    mode : Literal['percentage', 'long_side', 'short_side', 'width', 'height'], optional
+        リサイズ方法を指定するモード。規定値は 'percentage'。
         - 'percentage': 画像全体を指定されたパーセンテージでリサイズ。
         - 'long_side': 長辺を value に合わせてリサイズ（短辺は比率を維持）。
         - 'short_side': 短辺を value に合わせてリサイズ（長辺は比率を維持）。
@@ -51,7 +51,7 @@ def main(# --- DO NOT DELETE | 削除厳禁: System Reserved ---
         JPEG 保存時の品質。規定値は 92。
     allow_enlarge : bool, optional
         元の大きさより拡大することを許容する。規定値は False。
-    '''
+    """
 
     extensions = extensions.lower().replace(" ", "").split(";")
     modified_img_paths = [f for f in modified_files if f.suffix[1:].lower() in extensions]
