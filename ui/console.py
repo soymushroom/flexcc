@@ -13,6 +13,7 @@ from typing import Literal, Any, get_type_hints, get_origin, get_args
 import re
 from itertools import islice
 import ulid
+import shutil
 
 from config import settings
 from config.settings import general_settings
@@ -82,6 +83,22 @@ def apply_settings(local_root: str, remote_root: str, sync_every: int, hold_afte
     gr.Info("General settings are updated.")
     return manual_sync()
 
+# スクリプト辞書作成
+def get_script_dicts():
+    name_counts: dict[str, int] = {}
+    id_name_dict: dict[str, str] = {}
+    ids = [Path(x).stem for x in glob("scripts/??????????????????????????/")]
+    for id_ in ids:
+        name = CustomScriptAttributes.load(id_).name
+        suffix = ""
+        if name in name_counts.keys():
+            suffix = f"({name_counts[name] + 1})"
+        else:
+            name_counts[name] = 0
+        id_name_dict[id_] = name + suffix
+        name_counts[name] += 1
+    name_id_dict = {v: k for k, v in id_name_dict.items()}
+    return id_name_dict, name_id_dict
 
 # 引数オブジェクトの表示
 def create_arg_component(annotation: Any, name, script: CustomScript, default: Any):
@@ -197,6 +214,24 @@ def save_custom_scripts(scripts: list[CustomScript], *args: Any):
     custom_script_group.dump()
     gr.Info("Custom scripts updated.")
     return manual_sync()
+
+# カスタムスクリプト生成
+def create_new_script(name: str):
+    id_ = str(ulid.ULID())
+    shutil.copytree(settings.blank_script_path, settings.scripts_path / id_)
+    attr = CustomScriptAttributes.load(id_)
+    attr.name = name
+    attr.dump()
+    gr.Info("New script created.")
+    id_name_dict, name_id_dict = get_script_dicts()
+    choices = tuple(id_name_dict.values())
+    return id_name_dict, name_id_dict, gr.update(choices=choices, value=choices[-1]), datetime.now()
+
+# カスタムスクリプトプレビュー
+def show_script_path(name: str, name_id_dict: dict[str, str]):
+    id_ = name_id_dict[name]
+    path_text = str((settings.scripts_path / id_).absolute())
+    return gr.update(value=path_text)
 
 # 絵文字取得
 def get_icon_emojis(sync_rocal: SyncDirectory, sync_remote: SyncDirectory):
@@ -319,19 +354,7 @@ def create_gradio_ui():
             @gr.render(inputs=[gr_state_scripts, gr_state_selected_script], triggers=[gr_state_refresh_scripts.change])
             def render_custom_scripts(scripts: list[CustomScript], selected_script: int):
                 # IDと名前の対応表を取得
-                name_counts: dict[str, int] = {}
-                id_name_dict: dict[str, str] = {}
-                ids = [Path(x).stem for x in glob("scripts/??????????????????????????/")]
-                for id_ in ids:
-                    name = CustomScriptAttributes.create(id_).name
-                    suffix = ""
-                    if name in name_counts.keys():
-                        suffix = f"({name_counts[name] + 1})"
-                    else:
-                        name_counts[name] = 0
-                    id_name_dict[id_] = name + suffix
-                    name_counts[name] += 1
-                name_id_dict = {v: k for k, v in id_name_dict.items()}
+                id_name_dict, name_id_dict = get_script_dicts()
                 gr_state_id_name_dict = gr.State(id_name_dict)
                 gr_state_name_id_dict = gr.State(name_id_dict)
                 # スクリプト一覧表示
@@ -384,17 +407,47 @@ def create_gradio_ui():
                 )
             gr_btn_add_script: gr.Button = gr.Button("Add Script")
             gr_btn_save_scripts: gr.Button = gr.Button("Save Scripts", elem_id="button-apply")
-        # イベント
-        gr_btn_open_local.click(lambda x: select_directory(x, wx.DD_DIR_MUST_EXIST), inputs=gr_text_local_root, outputs=gr_text_local_root)
-        gr_btn_open_remote.click(lambda x: select_directory(x, wx.DD_DIR_MUST_EXIST), inputs=gr_text_remote_root, outputs=gr_text_remote_root)
-        gr_btn_apply_settings.click(apply_settings, inputs=[
-            gr_text_local_root,
-            gr_text_remote_root,
-            gr_num_sync_freq_mins,
-            gr_num_hold_after_created_days,
-            gr_num_hold_after_modified_days,
-            gr_num_server_port,
-        ], outputs=gr_state_refresh_dirs)
+
+            # スクリプト作成
+            gr.Markdown("## Create New Scripts")
+            with gr.Row(equal_height=True):
+                gr_tb_script_name: gr.Textbox = gr.Textbox("New Script", show_label=False, interactive=True, scale=2)
+                gr_btn_create_script: gr.Button = gr.Button("🥪 Create!")
+            # プレビュー
+            gr.Markdown("### Script Finder")
+            id_name_dict, name_id_dict = get_script_dicts()
+            gr_state_id_name_dict: gr.State = gr.State(id_name_dict)
+            gr_state_name_id_dict: gr.State = gr.State(name_id_dict)
+            with gr.Group():
+                gr_dd_preview_script: gr.Dropdown = gr.Dropdown(tuple(id_name_dict.values()), value=None, show_label=False)
+                gr_md_script_path: gr.Markdown = gr.Markdown(show_copy_button=True)
+            
+            # イベント
+            gr_btn_open_local.click(lambda x: select_directory(x, wx.DD_DIR_MUST_EXIST), inputs=gr_text_local_root, outputs=gr_text_local_root)
+            gr_btn_open_remote.click(lambda x: select_directory(x, wx.DD_DIR_MUST_EXIST), inputs=gr_text_remote_root, outputs=gr_text_remote_root)
+            gr_btn_apply_settings.click(apply_settings, inputs=[
+                gr_text_local_root,
+                gr_text_remote_root,
+                gr_num_sync_freq_mins,
+                gr_num_hold_after_created_days,
+                gr_num_hold_after_modified_days,
+                gr_num_server_port,
+            ], outputs=gr_state_refresh_dirs)
+            gr_btn_create_script.click(
+                create_new_script,
+                inputs=gr_tb_script_name,
+                outputs=[
+                    gr_state_id_name_dict,
+                    gr_state_name_id_dict,
+                    gr_dd_preview_script,
+                    gr_state_refresh_scripts
+                ]
+            )
+            gr_dd_preview_script.change(
+                show_script_path,
+                inputs=[gr_dd_preview_script, gr_state_name_id_dict],
+                outputs=gr_md_script_path
+            )
 
         # 同期ボタン
         gr_btn_sync = gr.Button("Sync Manually", elem_id="button-apply")
