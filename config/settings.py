@@ -16,10 +16,11 @@ os.makedirs(cache_dir, exist_ok=True)
 local_dump_filename: Path = cache_dir / f"local{root_dir_ext}"
 remote_dump_filename: Path = cache_dir / f"remote{root_dir_ext}"
 console_refresh_interval_sec: int = 15
-general_settings_path: Path = Path('config') / 'general_settings.yaml'
-
+blank_script_path: Path = Path("sys") / "blank_script"
+scripts_path: Path = Path("scripts")
 
 # ユーザー設定
+general_settings_path: Path = Path('config') / 'general_settings.yaml'
 class GeneralSettings(BaseModel):
     """
     ユーザー設定を保持するクラス

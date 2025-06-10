@@ -8,9 +8,9 @@ def main(# --- DO NOT DELETE | 削除厳禁: System Reserved ---
     source_dir: SyncDirectory, dest_dir: SyncDirectory, modified_files: list[Path], removed_files: list[Path], 
     # --- END ---
     archive_to: Path, 
-    extensions: str="*"
+    extensions: str='*'
 ):
-    '''同期によって削除対象になったリモートファイルを指定したフォルダへ退避します。
+    """同期によって削除対象になったリモートファイルを指定したフォルダへ退避します。
 
     Parameters
     ----------
@@ -29,10 +29,10 @@ def main(# --- DO NOT DELETE | 削除厳禁: System Reserved ---
     archive_to : Path
         削除対象のファイルを退避させるフォルダを指定する。
     extensions : str, optional
-        対象とする画像ファイルの拡張子をセミコロン区切りで指定する。規定値は "*"。
-        大文字小文字は区別しない。"*" ですべての拡張子を対象とする。
+        対象とする画像ファイルの拡張子をセミコロン区切りで指定する。規定値は '*'。
+        大文字小文字は区別しない。'*' ですべての拡張子を対象とする。
         例: jpg;jpeg;png;
-    '''
+    """
     
     # 拡張子判定
     if "*" in extensions:

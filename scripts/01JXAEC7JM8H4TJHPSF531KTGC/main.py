@@ -5,9 +5,9 @@ from core.dirsync import SyncDirectory
 def main(# --- DO NOT DELETE | 削除厳禁: System Reserved ---
     source_dir: SyncDirectory, dest_dir: SyncDirectory, modified_files: list[Path], removed_files: list[Path], 
     # --- END ---
-    text: str="Hello World!"
+    text: str='Hello World!'
 ):
-    '''指定した文字列を出力するだけのスクリプトです。
+    """指定した文字列を出力するだけのスクリプトです。
 
     Parameters
     ----------
@@ -24,7 +24,7 @@ def main(# --- DO NOT DELETE | 削除厳禁: System Reserved ---
     # End System-reserved
     </hide>
     text : str, optional
-        表示する文字列を指定する。規定値は "Hello World!"。
-    '''
+        表示する文字列を指定する。規定値は 'Hello World!'。
+    """
     
     print(text)

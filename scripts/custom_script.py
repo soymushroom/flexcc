@@ -26,7 +26,7 @@ class CustomScriptAttributes(BaseModel):
     version: list[int] = [0, 1, 0]
 
     @classmethod
-    def create(cls, id_: str) -> 'CustomScriptAttributes':
+    def load(cls, id_: str) -> 'CustomScriptAttributes':
         path_ = Path("scripts") / id_ / "attributes.yaml"
         instance: CustomScriptAttributes = yaml.load(path_.read_text(encoding='utf8'), Loader=yaml.Loader)
         instance.id_ = id_
@@ -95,7 +95,7 @@ class CustomScript(BaseModel):
         instance = CustomScript(
             id_=id_,
             fn=fn,
-            attributes=CustomScriptAttributes.create(id_),
+            attributes=CustomScriptAttributes.load(id_),
             default_values=default_values,
             annotations=annotations,
             kwargs=kwargs
