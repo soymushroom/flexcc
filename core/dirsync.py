@@ -1,6 +1,7 @@
 from __future__ import annotations
 from pydantic import BaseModel, field_validator
 from abc import ABC, abstractmethod
+from typing import ClassVar, Literal
 from datetime import datetime, timedelta, time
 import ulid
 from pathlib import Path
@@ -14,8 +15,8 @@ from win11toast import toast
 import io
 from contextlib import redirect_stdout
 import copy
-import inspect
 import re
+import threading
 
 from config import settings
 from config.settings import general_settings
@@ -27,6 +28,9 @@ class SyncDirectory(BaseModel):
     """
     同期対象のフォルダ状態を保持するクラス
     """
+
+    sync_stats: ClassVar[dict[str, Literal['init', 'check', 'script', 'rename', 'sync', 'remove']]] = {}
+    lock_: ClassVar[threading.Lock] = threading.Lock()
 
     path_: Path
     id_: str
@@ -60,13 +64,23 @@ class SyncDirectory(BaseModel):
 
     def sync(self, dst: SyncDirectory):
         from scripts.custom_script import CustomScript, custom_script_group
-        now = datetime.now()
-        logs: list[str] = []
+        print(f'\nSync: {self.path_.stem}')
+        # すでに同期中なら中断
+        with SyncDirectory.lock_:
+            if self.id_ in SyncDirectory.sync_stats.keys():
+                print("Sync Aborted: Another task is running already.")
+                return
+            SyncDirectory.sync_stats[self.id_] = "init"  # ステータス更新
+        # ロックされているフォルダなら中断
         if dst.locked:
-            # ロックされているフォルダなら中断
-            print(f'\nLocked Remote: {dst.path_.stem}\nSync skipped')
+            print("Sync Aborted: Remote folder is locked.")
+            # 同期ステータス解除
+            with SyncDirectory.lock_:
+                del SyncDirectory.sync_stats[self.id_]
             return
         # 初期化
+        now = datetime.now()
+        logs: list[str] = []
         self.synced_at = now
         command: list = [
             "robocopy",
@@ -81,13 +95,16 @@ class SyncDirectory(BaseModel):
             "/NJH",   # ジョブヘッダを表示しない（開始時の情報）
             "/NJS",   # ジョブサマリを表示しない（統計情報）
         ]
-        print(f'\nSync: {self.path_.stem}')
+        # 同期実行可否チェック
+        with SyncDirectory.lock_:
+            SyncDirectory.sync_stats[self.id_] = "check"  # ステータス更新
+        print(f'Checking...')
         result = subprocess.run(command, capture_output=True, text=True, shell=True)
         sync_log = None
         do_rename = dst.path_.stem != self.path_.stem  # リネーム実行要否
         do_sync = False  # 同期実行要否
-        # 同期実行可否チェック
         modified_files, removed_files = [], []
+        # 判定
         if result.returncode > 7:
             print('Error')
         elif result.returncode == 0:
@@ -107,6 +124,8 @@ class SyncDirectory(BaseModel):
                 else:
                     removed_files.append(path_.relative_to(dst.path_))
         # カスタムスクリプト実行
+        with SyncDirectory.lock_:
+            SyncDirectory.sync_stats[self.id_] = "script"  # ステータス更新
         if do_rename or do_sync:
             for script in custom_script_group.scripts:
                 print(f"Run custom script: {script.attributes.name}")
@@ -116,6 +135,8 @@ class SyncDirectory(BaseModel):
                 script.run(self, dst, modified_files, removed_files)
                 print("--- end ---")
         # ローカルに合わせてリモートフォルダをリネーム
+        with SyncDirectory.lock_:
+            SyncDirectory.sync_stats[self.id_] = "rename"  # ステータス更新
         dst_path = dst.path_
         if do_rename:
             dst_path = dst.path_.parent / self.path_.stem
@@ -125,6 +146,8 @@ class SyncDirectory(BaseModel):
             logs.append(log)
             self.modified_at = now
         # ミラーリング実行
+        with SyncDirectory.lock_:
+            SyncDirectory.sync_stats[self.id_] = "sync"  # ステータス更新
         if do_sync:
             command[2] = dst_path  # 同期先を更新（リネーム対応）
             command = [c for c in command if c != '/L']
@@ -144,6 +167,8 @@ class SyncDirectory(BaseModel):
         shutil.copy2(self.path_ / settings.sync_dir_ext, dst_path / settings.sync_dir_ext)
         sync_remote = SyncDirectory.create(dst_path)
         # 削除チェック
+        with SyncDirectory.lock_:
+            SyncDirectory.sync_stats[self.id_] = "remove"  # ステータス更新
         print(f'Local will be removed at: {self.be_removed_at:%Y-%m-%d %H:%M}')
         if (now > self.be_removed_at):
             # リモートをロックして自身を削除
@@ -151,6 +176,9 @@ class SyncDirectory(BaseModel):
             sync_remote.dump()
             self.remove()
             print(f"Remove local: {self.path_.stem}")
+        # 同期ステータス解除
+        with SyncDirectory.lock_:
+            del SyncDirectory.sync_stats[self.id_]
         return sync_remote
     
     def lock(self):
