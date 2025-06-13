@@ -5,6 +5,9 @@ import os
 import ctypes
 import shutil
 
+# システム
+gr_error_duration: int = 12
+gr_info_duration: int = 6
 
 # 定数
 sync_dir_ext = '._fxcc_sync'
