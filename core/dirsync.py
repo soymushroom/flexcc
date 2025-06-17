@@ -1,7 +1,7 @@
 from __future__ import annotations
 from pydantic import BaseModel, field_validator
 from abc import ABC, abstractmethod
-from typing import ClassVar, Literal
+from typing import ClassVar, Literal, Callable, Any
 from datetime import datetime, timedelta, time
 import ulid
 from pathlib import Path
@@ -68,9 +68,9 @@ class SyncDirectory(BaseModel):
         return instance
     
 
-    def get_sync_command(self, dst_path: Path, mode: Literal['mirroring', 'download']) -> list[str]:
+    def get_sync_command(self, dst_path: Path, mode: Literal['mirroring', 'download', 'debug']) -> list[str]:
         command = []
-        if mode == 'mirroring':
+        if mode in ['mirroring', 'debug']:
             command: list = [
                 "robocopy",
                 self.path_,
@@ -102,7 +102,7 @@ class SyncDirectory(BaseModel):
             ]
         return command
 
-    def get_sync_check_command(self, dst_path: Path, mode: Literal['mirroring', 'download']) -> list[str]:
+    def get_sync_check_command(self, dst_path: Path, mode: Literal['mirroring', 'download', 'debug']) -> list[str]:
         return self.get_sync_command(dst_path, mode) + ["/L"]
 
     def copy(self):
@@ -118,7 +118,7 @@ class SyncDirectory(BaseModel):
         # 書き込み
         filename.write_text(yaml.dump(self, allow_unicode=True), encoding='utf8')
 
-    def check(self, dst: SyncDirectory, mode: Literal['mirroring', 'download']):
+    def check(self, dst: SyncDirectory, mode: Literal['mirroring', 'download', 'debug']):
         """フォルダの同期結果をチェックする。実際には同期しない。
 
         Parameters
@@ -152,13 +152,13 @@ class SyncDirectory(BaseModel):
             # 編集対象か削除対象かを判定（リモート配下のファイルなら削除対象）
             for path_ in paths:
                 if is_subpath(self.path_, path_):
-                    modified_files.append(path_.relative_to(self.path_))
+                    modified_files.append(path_.relative_to(self.path_.absolute()))
                 elif is_subpath(dst.path_, path_):
-                    removed_files.append(path_.relative_to(dst.path_))
+                    removed_files.append(path_.relative_to(dst.path_.absolute()))
         return modified_files, removed_files
 
 
-    def sync(self, dst: SyncDirectory, mode: Literal['mirroring', 'download']):
+    def sync(self, dst: SyncDirectory, mode: Literal['mirroring', 'download', 'debug'], debug_script_id: str=None, debug_kwargs: dict[str, Any]={}):
         from scripts.custom_script import CustomScript, custom_script_group
         print(f'\nSync: {self.path_.stem}')
         # すでに同期中なら中断
@@ -188,7 +188,12 @@ class SyncDirectory(BaseModel):
         with SyncDirectory.lock_:
             SyncDirectory.sync_stats[self.id_] = "script"  # ステータス更新
         if do_rename or do_sync:
-            for script in custom_script_group.scripts:
+            scripts = []
+            if mode == 'debug' and debug_script_id is not None:
+                scripts = [CustomScript.create(debug_script_id, **debug_kwargs)]
+            if mode != 'debug':
+                scripts = custom_script_group.scripts
+            for script in scripts:
                 print(f"Run custom script: {script.attributes.name}")
                 print("--- docstring ---")
                 print(enable_hide_tag(script.getdoc()))
@@ -287,7 +292,7 @@ class LocalRootDirectory(RootDirectory):
         return super().dump(settings.local_dump_filename)
     
 
-    def sync(self, remote_root: RemoteRootDirectory):
+    def sync(self, remote_root: RemoteRootDirectory, mode: Literal['mirroring', 'download', 'debug'], debug_script_id: str=None, debug_kwargs: dict[str, Any]={}):
         # フォルダのリネーム
         local_dir_dict: dict[str, SyncDirectory] = {d.id_: d for d in self.sync_directories}
         remote_dir_dict: dict[str, SyncDirectory] = {d.id_: d for d in remote_root.sync_directories}
@@ -314,7 +319,7 @@ class LocalRootDirectory(RootDirectory):
         for local_dir in self.sync_directories.copy():
             remote_dir = remote_dir_dict[local_dir.id_]
             local_dir.is_locked = False
-            remote_dir = local_dir.sync(remote_dir, 'mirroring')
+            remote_dir = local_dir.sync(remote_dir, mode, debug_script_id, debug_kwargs)
             # 削除チェック
             if not local_dir.path_.exists():
                 self.sync_directories = [dir_ for dir_ in self.sync_directories if dir_ != local_dir]

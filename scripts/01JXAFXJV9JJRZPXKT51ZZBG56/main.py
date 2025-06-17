@@ -1,4 +1,7 @@
 from pathlib import Path
+import sys
+if __name__ == '__main__':
+    sys.path.append(str(Path(__file__).resolve().parents[2]))
 from core.dirsync import SyncDirectory
 
 
@@ -41,3 +44,10 @@ def main(# --- DO NOT DELETE | 削除厳禁: System Reserved ---
             print(f"  {str(p)}")
     else:
         print("  * None *")
+
+
+if __name__ == '__main__':
+    from debug.debug import ScriptDebugger
+    
+    debugger = ScriptDebugger(script_id=Path(__file__).resolve().parent.name)
+    debugger.run()
