@@ -1,4 +1,7 @@
 from pathlib import Path
+import sys
+if __name__ == '__main__':
+    sys.path.append(str(Path(__file__).resolve().parents[2]))
 from core.dirsync import SyncDirectory
 from typing import Literal
 from PIL import Image
@@ -141,3 +144,20 @@ def main(# --- DO NOT DELETE | 削除厳禁: System Reserved ---
                         resized.save(output_path, "JPEG", quality=jpeg_quality, **kwargs)
                     else:
                         resized.save(output_path)
+
+
+if __name__ == '__main__':
+    from debug.debug import ScriptDebugger
+    
+    print(f'--- Start debug ---')
+    id_ = Path(__file__).resolve().parent.name
+    print(f'ID: {id_}')
+    debugger = ScriptDebugger(script_id=id_)
+    print(f'--- Sync debug folder ---')
+    kwargs=dict(
+        export_to=Path(ScriptDebugger.BACKUP_DIR), 
+        mode='long_side', 
+        value=2048, 
+        allow_enlarge=False
+    )
+    debugger.run(**kwargs)

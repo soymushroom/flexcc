@@ -49,5 +49,10 @@ def main(# --- DO NOT DELETE | 削除厳禁: System Reserved ---
 if __name__ == '__main__':
     from debug.debug import ScriptDebugger
     
-    debugger = ScriptDebugger(script_id=Path(__file__).resolve().parent.name)
-    debugger.run()
+    print(f'--- Start debug ---')
+    id_ = Path(__file__).resolve().parent.name
+    print(f'ID: {id_}')
+    debugger = ScriptDebugger(script_id=id_)
+    print(f'--- Sync debug folder ---')
+    kwargs=dict()
+    debugger.run(**kwargs)

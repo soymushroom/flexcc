@@ -197,6 +197,8 @@ class SyncDirectory(BaseModel):
                 print(f"Run custom script: {script.attributes.name}")
                 print("--- docstring ---")
                 print(enable_hide_tag(script.getdoc()))
+                print("--- parameters ---")
+                print(yaml.dump(script.kwargs, allow_unicode=True), end="")
                 print("--- run ---")
                 script.run(self, dst, modified_files, removed_files)
                 print("--- end ---")

@@ -7,8 +7,9 @@ import shutil
 
 class ScriptDebugger(BaseModel):
     
-    ORIGIN_DIR: ClassVar[Path] = Path('debug') / 'origin'
-    RESULT_DIR: ClassVar[Path] = Path('debug') / 'result'
+    ORIGIN_DIR: ClassVar[Path] = (Path('debug') / 'origin').resolve()
+    RESULT_DIR: ClassVar[Path] = (Path('debug') / 'result').resolve()
+    BACKUP_DIR: ClassVar[Path] = RESULT_DIR / 'bak'
 
     script_id: str
     root_local: LocalRootDirectory = LocalRootDirectory(path_=RESULT_DIR / 'src')
@@ -16,6 +17,13 @@ class ScriptDebugger(BaseModel):
 
 
     def run(self, **kwargs):
+        dirs = [
+            ScriptDebugger.ORIGIN_DIR, 
+            ScriptDebugger.RESULT_DIR, 
+            ScriptDebugger.BACKUP_DIR
+        ]
+        for dir_ in dirs:
+            dir_.mkdir(parents=True, exist_ok=True)
         if ScriptDebugger.RESULT_DIR.exists():
             shutil.rmtree(ScriptDebugger.RESULT_DIR)
         shutil.copytree(ScriptDebugger.ORIGIN_DIR, ScriptDebugger.RESULT_DIR)
