@@ -12,5 +12,9 @@ wheels/
 # Cache directory
 cache/
 
+# Debug
+debug/result/
+
 # preference file
-config/
+config/*
+!config/*.py

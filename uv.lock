@@ -170,7 +170,7 @@ wheels = [
 ]
 
 [[package]]
-name = "flex-carbon-copy"
+name = "flexcc"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

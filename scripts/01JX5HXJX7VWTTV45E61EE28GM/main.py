@@ -1,4 +1,7 @@
 from pathlib import Path
+import sys
+if __name__ == '__main__':
+    sys.path.append(str(Path(__file__).resolve().parents[2]))
 from core.dirsync import SyncDirectory
 from tqdm import tqdm
 import shutil
@@ -64,3 +67,17 @@ def main(# --- DO NOT DELETE | 削除厳禁: System Reserved ---
                 copy_to = archive_to / source_dir.path_.stem / archived_path
                 copy_to.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(copy_from, copy_to)
+
+
+if __name__ == '__main__':
+    from debug.debug import ScriptDebugger
+    
+    print(f'--- Start debug ---')
+    id_ = Path(__file__).resolve().parent.name
+    print(f'ID: {id_}')
+    debugger = ScriptDebugger(script_id=id_)
+    print(f'--- Sync debug folder ---')
+    kwargs=dict(
+        archive_to=Path(ScriptDebugger.BACKUP_DIR)
+    )
+    debugger.run(**kwargs)

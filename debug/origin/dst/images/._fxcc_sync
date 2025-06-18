@@ -1,0 +1,10 @@
+!SyncDirectory
+created_at: 2025-06-17 21:23:08.273502
+id_: 01JXYXFQ7W4Z7475EAJ3ZGSMXP
+is_locked: false
+modified_at: &id001 2025-06-17 21:25:21.903110
+modify_log: "Sync: images\n  C:\\Users\\hchub\\repos\\flexcc\\debug\\temp\\src\\images\\\
+  ._fxcc_sync"
+path_: !!python/object/apply:pathlib._local.WindowsPath
+- debug\temp\src\images\
+synced_at: *id001
