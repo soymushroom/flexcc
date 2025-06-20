@@ -1,0 +1,66 @@
+/* ==== ベースカラー定義 ==== */
+:root {
+  --md-primary-fg-color: #a8e6cf !important;   /* 柔らかいペールグリーン */
+  --md-accent-fg-color: #dcedc1 !important;    /* アクセントもグリーン系に */
+  --md-default-bg-color: #16241c !important;   /* より緑寄りの深い背景色 */
+  --md-default-fg-color: #e0e0e0 !important;   /* 文字色もややグリーン寄り */
+}
+
+/* ==== 本文の文字色を調整 ==== */
+.md-typeset {
+  color: #e0e0e0 !important;  /* お好みの明るめカラーに */
+}
+.md-typeset h1 {
+  color: #e0e0e0 !important;  /* お好みの明るめカラーに */
+}
+
+/* ==== ヘッダー・タブの背景色（なじませる）==== */
+.md-header,
+.md-tabs {
+  background-color: #243c32 !important;
+}
+
+/* サイドナビ最上部の site_name を非表示 */
+.md-nav__title {
+  display: none !important;
+}
+
+/* ==== ナビゲーションバーの文字サイズ調整 ==== */
+.md-nav__link {
+  font-size: 0.95rem !important;  /* 通常のナビリンク */
+  color: #e0e0e0 !important;      /* 柔らかい緑系文字色 */
+  transition: color 0.2s;
+}
+
+/* セクション内のマージンを狭くする */
+.md-nav__list {
+  font-size: 0.75rem !important;  /* 通常のナビリンク */
+  padding-left: 1.0rem !important; /* ネスト分の左余白 */
+}
+
+/* ==== サイドナビ: ホバー・現在ページ ==== */
+.md-nav__link:hover,
+.md-nav__link:focus {
+  color: #45ffc7 !important;   /* ソフトなイエローでホバー強調 */
+}
+
+.md-nav__link--active {
+  color: #ffeb80 !important;   /* 現在ページも同様に */
+  font-weight: bold;
+}
+
+/* ==== 通常リンク ==== */
+a,
+.md-typeset a {
+  color: #ffee99;
+}
+
+a:hover {
+  color: #f4e88b;
+}
+
+/* ==== ヘッダー・タブの背景色（なじませる）==== */
+.md-header,
+.md-tabs {
+  background-color: #243c32 !important;
+}
