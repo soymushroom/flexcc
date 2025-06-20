@@ -48,14 +48,14 @@ def select_file(default: str, style: int=wx.FD_DEFAULT_STYLE):
     dialog.Destroy()
     return file
 
-# フォルダ選択
+# ディレクトリ選択
 def select_directory(default: str, style: int=wx.DD_DEFAULT_STYLE):
-    folder = default
-    dialog = wx.DirDialog(None, "Select Folder", style=style)
+    directory = default
+    dialog = wx.DirDialog(None, "Select Directory", style=style)
     if dialog.ShowModal() == wx.ID_OK:
-        folder = dialog.GetPath()
+        directory = dialog.GetPath()
     dialog.Destroy()
-    return folder
+    return directory
 
 # マニュアル同期
 def manual_sync():
@@ -143,7 +143,7 @@ def create_arg_component(annotation: Any, name, script: CustomScript, default: A
             with gr.Row(equal_height=False, elem_id="row-bottom") as row:
                 tb = gr.Textbox(interactive=True, **kwargs, scale=5)
                 btn_file = gr.Button("📄 file", elem_id="button-icon")
-                btn_dir = gr.Button("📁 folder", elem_id="button-icon")
+                btn_dir = gr.Button("📁 directory", elem_id="button-icon")
             btn_file.click(lambda x: select_file(x, wx.FD_DEFAULT_STYLE), inputs=tb, outputs=tb)
             btn_dir.click(lambda x: select_directory(x, wx.DD_DEFAULT_STYLE), inputs=tb, outputs=tb)
             return tb
@@ -245,7 +245,7 @@ def get_icon_emojis(sync_rocal: SyncDirectory, sync_remote: SyncDirectory):
         icon_text = icon_text.replace("🔒", "🔄️")
     return icon_text
 
-# リモートフォルダのロック
+# リモートディレクトリのロック
 def lock_remote(sync_local: SyncDirectory, sync_remote: SyncDirectory, root_remote: RemoteRootDirectory):
     sync_remote.lock()
     sync_remote.dump()
@@ -260,15 +260,15 @@ def lock_remote(sync_local: SyncDirectory, sync_remote: SyncDirectory, root_remo
         gr.update(interactive=True), 
     )
 
-# リモートフォルダのアンロック
+# リモートディレクトリのアンロック
 def unlock_remote(sync_local: SyncDirectory, sync_remote: SyncDirectory, root_remote: RemoteRootDirectory):
     sync_local_temp = SyncDirectory.create(sync_local.path_)
     sync_remote_temp = SyncDirectory.create(sync_remote.path_)
     sync_remote_temp.is_locked = False
-    modified, removed = sync_local_temp.check(sync_remote_temp, mode='mirroring')
+    modified, removed = sync_local_temp.check(sync_remote_temp, mode='synchronizing')
     if len(removed) > 0:
         raise gr.Error(
-            "There are files that will be deleted due to sync. Please download the remote folder before unlocking.", 
+            "There are files that will be deleted due to sync. Please download the remote directory before unlocking.", 
             title="❗Extra Files Exists", 
             duration=settings.gr_error_duration,
         )
@@ -285,10 +285,10 @@ def unlock_remote(sync_local: SyncDirectory, sync_remote: SyncDirectory, root_re
         gr.update(interactive=False), 
     )
 
-# ローカルフォルダの削除
+# ローカルディレクトリの削除
 def remove_local_dir(sync_local: SyncDirectory, sync_remote: SyncDirectory, root_local: LocalRootDirectory):
     if not sync_remote.is_locked:
-        raise gr.Error("Remote folder is not locked.", title="❗Unlocked Remote", duration=settings.gr_error_duration)
+        raise gr.Error("Remote directory is not locked.", title="❗Unlocked Remote", duration=settings.gr_error_duration)
     sync_local.remove()
     root_local.sync_directories = [dir_ for dir_ in root_local.sync_directories if dir_.id_ != sync_local.id_]
     root_local.dump()
@@ -301,14 +301,14 @@ def remove_local_dir(sync_local: SyncDirectory, sync_remote: SyncDirectory, root
         gr.update(interactive=True), 
     ) 
 
-# リモートフォルダのダウンロード
+# リモートディレクトリのダウンロード
 def download_remote_dir(sync_local: SyncDirectory, sync_remote: SyncDirectory, root_local: LocalRootDirectory):
     if not sync_remote.is_locked:
-        raise gr.Error("Remote folder is not locked.", title="❗Unlocked Remote", duration=settings.gr_error_duration)
+        raise gr.Error("Remote directory is not locked.", title="❗Unlocked Remote", duration=settings.gr_error_duration)
     sync_local_temp = None
     sync_remote_temp = SyncDirectory.create(sync_remote.path_)
     if sync_local is None:
-        # コピー先フォルダ生成
+        # コピー先ディレクトリ生成
         dst = root_local.path_ / sync_remote.path_.stem
         os.makedirs(dst, exist_ok=True)
         sync_local_temp = SyncDirectory.create(dst, sync_remote.id_)
@@ -347,10 +347,10 @@ def create_gradio_ui():
             gr.Markdown("# Preferences")
             gr.Markdown("## General settings")
             with gr.Row(equal_height=True):
-                gr_text_local_root: gr.Textbox = gr.Textbox(label="📁Local Folder", interactive=True)
+                gr_text_local_root: gr.Textbox = gr.Textbox(label="📁Local Directory", interactive=True)
                 gr_btn_open_local: gr.Button = gr.Button("Open", elem_id="button")
             with gr.Row(equal_height=True):
-                gr_text_remote_root: gr.Textbox = gr.Textbox(label="☁️Remote Folder", interactive=True)
+                gr_text_remote_root: gr.Textbox = gr.Textbox(label="☁️Remote Directory", interactive=True)
                 gr_btn_open_remote: gr.Button = gr.Button("Open", elem_id="button")
             with gr.Row(equal_height=True):
                 gr_num_server_port: gr.Number = gr.Number(
@@ -471,11 +471,11 @@ def create_gradio_ui():
         # 同期ボタン
         gr_btn_sync = gr.Button("Sync Manually", elem_id="button-apply")
         gr_btn_sync.click(manual_sync, outputs=gr_state_refresh_dirs)
-        # フォルダビューワー
+        # ディレクトリビューワー
         gr_timer = gr.Timer(settings.console_refresh_interval_sec)
         @gr.render(triggers=[gr_timer.tick, gr_state_refresh_dirs.change])
         def render_sync_dirs():
-            # フォルダ一覧取得
+            # ディレクトリ一覧取得
             if not settings.local_dump_filename.exists() or not settings.remote_dump_filename.exists():
                 return
             root_local: LocalRootDirectory = yaml.load(settings.local_dump_filename.read_text(encoding='utf8'), Loader=yaml.Loader)
@@ -495,7 +495,7 @@ def create_gradio_ui():
             if sync_times:
                 synced_at = max(sync_times).strftime("%Y-%m-%d %H:%M")
             gr.Markdown(f"Synced at: {synced_at}")
-            # フォルダ概要を表示
+            # ディレクトリ概要を表示
             rows = []
             for k, v in sorted(ids.items(), reverse=True):
                 sync_local: SyncDirectory = v["local"] if "local" in v.keys() else None

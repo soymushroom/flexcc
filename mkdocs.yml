@@ -1,3 +1,46 @@
-site_name: My Docs
+site_name: flexcc
+repo_url: https://github.com/soymushroom/flexcc
+repo_name: flexcc
+
 theme:
   name: material
+  favicon: images/logo.png  # または favicon.png
+  logo: images/logo.png  # カスタムロゴ（任意）
+  palette:
+    - scheme: custom  # ダークテーマベース
+      primary: custom
+      accent: custom
+  features:
+    - navigation.sections
+    - navigation.indexes 
+    - search.suggest
+    - search.highlight
+  custom_dir: docs/overrides
+
+plugins:
+  - search
+  
+extra_css:
+  - css/main.css
+
+extra_javascript: 
+  - js/main.js
+
+nav:
+  - Introduction: 
+    - index.md
+  - Getting started: 
+    - getting-started/index.md
+    - Installation: getting-started/installation.md
+    - First steps: getting-started/first-steps.md
+    - Features: getting-started/features.md
+  - Guides: 
+    - guides/index.md
+    - Sync directories: guides/sync-directories.md
+    - Managing storage: guides/manage-storage.md
+    - Running scripts: guides/run-scripts.md
+  - Reference: 
+    - reference/index.md
+    - Pre-installed scripts: reference/custom-scripts.md
+    - Platform Support: reference/platform-support.md
+    - License: reference/license.md

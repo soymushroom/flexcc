@@ -1,17 +1,21 @@
-# Welcome to MkDocs
+# Introduction
 
-For full documentation visit [mkdocs.org](https://www.mkdocs.org).
+flexcc はローカルで動作するデータバックアップアプリケーションです。ローカルディレクトリ、リモートディレクトリのペアを指定して、ローカルディレクトリのデータを自動的にリモートディレクトリにバックアップします。
 
-## Commands
+## Highlights
 
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs -h` - Print help message and exit.
+- ➡️ **一方向同期**: 同期は常にローカル→リモートの方向で行われます。バックアップ先のファイルを削除することでローカルディレクトリが破壊されることはありません
+- ✏️ **編集容易性**: ローカルディレクトリの変更は自動的にリモートディレクトリに反映されるため、常に高速なローカルディレクトリの作業環境を利用できます
+- 🗃️ **省スペース**: ディレクトリ単位で同期のON/OFFが切り替えられ、更新が止まったローカルディレクトリは自動的に削除されます。もちろんリモートディレクトリから再度ダウンロードすることも可能です
+- 🖥️ **設定コンソール**: 各種設定はコンソールから編集することができます。コンソール上では設定変更の他にもディレクトリごとの更新状況の確認や、リモートディレクトリのロック・アンロックもできます
 
-## Project layout
+## Use cases
 
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.
+**NASなどのネットワークストレージを利用した長期・低速のデータ保管**と**ローカルストレージによる短期・高速のデータ編集**をバランスよく使い分けたいというニーズにフィットします。
+
+### Examples
+
+- 📷 写真データの編集
+- 🎸 楽曲制作
+- 🖼️ イラスト制作
+- 🎞️ 動画編集

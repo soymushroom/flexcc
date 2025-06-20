@@ -26,7 +26,7 @@ from util.path_util import is_subpath
 
 class SyncDirectory(BaseModel):
     """
-    同期対象のフォルダ状態を保持するクラス
+    同期対象のディレクトリ状態を保持するクラス
     """
 
     sync_stats: ClassVar[dict[str, Literal['init', 'check', 'script', 'rename', 'sync', 'remove']]] = {}
@@ -56,7 +56,7 @@ class SyncDirectory(BaseModel):
         filename = path_ / settings.sync_dir_ext
         if filename.exists():
             if anew_id:
-                # フォルダ生成先がすでに存在する
+                # ディレクトリ生成先がすでに存在する
                 raise FileExistsError()
             instance: SyncDirectory = yaml.load(filename.read_text(encoding='utf8'), Loader=yaml.Loader)
             instance.path_ = path_
@@ -68,9 +68,9 @@ class SyncDirectory(BaseModel):
         return instance
     
 
-    def get_sync_command(self, dst_path: Path, mode: Literal['mirroring', 'download', 'debug']) -> list[str]:
+    def get_sync_command(self, dst_path: Path, mode: Literal['synchronizing', 'download', 'debug']) -> list[str]:
         command = []
-        if mode in ['mirroring', 'debug']:
+        if mode in ['synchronizing', 'debug']:
             command: list = [
                 "robocopy",
                 self.path_,
@@ -88,7 +88,7 @@ class SyncDirectory(BaseModel):
                 "robocopy",
                 self.path_,
                 dst_path,
-                "/E",     # 空フォルダも含めすべてコピー
+                "/E",     # 空ディレクトリも含めすべてコピー
                 "/XO",    # コピー先の方が新しい場合、上書きしない
                 "/XN",    # 同名ファイルがあっても新しければ無視
                 "/XC",    # 内容が違っても上書きしない
@@ -102,7 +102,7 @@ class SyncDirectory(BaseModel):
             ]
         return command
 
-    def get_sync_check_command(self, dst_path: Path, mode: Literal['mirroring', 'download', 'debug']) -> list[str]:
+    def get_sync_check_command(self, dst_path: Path, mode: Literal['synchronizing', 'download', 'debug']) -> list[str]:
         return self.get_sync_command(dst_path, mode) + ["/L"]
 
     def copy(self):
@@ -118,13 +118,13 @@ class SyncDirectory(BaseModel):
         # 書き込み
         filename.write_text(yaml.dump(self, allow_unicode=True), encoding='utf8')
 
-    def check(self, dst: SyncDirectory, mode: Literal['mirroring', 'download', 'debug']):
-        """フォルダの同期結果をチェックする。実際には同期しない。
+    def check(self, dst: SyncDirectory, mode: Literal['synchronizing', 'download', 'debug']):
+        """ディレクトリの同期結果をチェックする。実際には同期しない。
 
         Parameters
         ----------
         dst : SyncDirectory
-            同期先フォルダ
+            同期先ディレクトリ
 
         Returns
         -------
@@ -158,7 +158,7 @@ class SyncDirectory(BaseModel):
         return modified_files, removed_files
 
 
-    def sync(self, dst: SyncDirectory, mode: Literal['mirroring', 'download', 'debug'], debug_script_id: str=None, debug_kwargs: dict[str, Any]={}):
+    def sync(self, dst: SyncDirectory, mode: Literal['synchronizing', 'download', 'debug'], debug_script_id: str=None, debug_kwargs: dict[str, Any]={}):
         from scripts.custom_script import CustomScript, custom_script_group
         print(f'\nSync: {self.path_.stem}')
         # すでに同期中なら中断
@@ -167,9 +167,9 @@ class SyncDirectory(BaseModel):
                 print("Sync Aborted: Another task is running already.")
                 return
             SyncDirectory.sync_stats[self.id_] = "init"  # ステータス更新
-        # ロックされているフォルダなら中断
+        # ロックされているディレクトリなら中断
         if dst.is_locked:
-            print("Sync Aborted: Remote folder is locked.")
+            print("Sync Aborted: Remote directory is locked.")
             # 同期ステータス解除
             with SyncDirectory.lock_:
                 del SyncDirectory.sync_stats[self.id_]
@@ -202,7 +202,7 @@ class SyncDirectory(BaseModel):
                 print("--- run ---")
                 script.run(self, dst, modified_files, removed_files)
                 print("--- end ---")
-        # ローカルに合わせてリモートフォルダをリネーム
+        # ローカルに合わせてリモートディレクトリをリネーム
         with SyncDirectory.lock_:
             SyncDirectory.sync_stats[self.id_] = "rename"  # ステータス更新
         dst_path = dst.path_
@@ -259,7 +259,7 @@ class SyncDirectory(BaseModel):
 
 class RootDirectory(BaseModel, ABC):
     """
-    ローカルまたはリモートフォルダの状態を保持するクラス
+    ローカルまたはリモートディレクトリの状態を保持するクラス
     """
 
     path_: Path | None
@@ -286,7 +286,7 @@ class RootDirectory(BaseModel, ABC):
 
 class LocalRootDirectory(RootDirectory):
     """
-    ローカルフォルダ
+    ローカルディレクトリ
     """
 
 
@@ -294,8 +294,8 @@ class LocalRootDirectory(RootDirectory):
         return super().dump(settings.local_dump_filename)
     
 
-    def sync(self, remote_root: RemoteRootDirectory, mode: Literal['mirroring', 'download', 'debug'], debug_script_id: str=None, debug_kwargs: dict[str, Any]={}):
-        # フォルダのリネーム
+    def sync(self, remote_root: RemoteRootDirectory, mode: Literal['synchronizing', 'download', 'debug'], debug_script_id: str=None, debug_kwargs: dict[str, Any]={}):
+        # ディレクトリのリネーム
         local_dir_dict: dict[str, SyncDirectory] = {d.id_: d for d in self.sync_directories}
         remote_dir_dict: dict[str, SyncDirectory] = {d.id_: d for d in remote_root.sync_directories}
         # ローカルとリモートのペアを作成
@@ -311,7 +311,7 @@ class LocalRootDirectory(RootDirectory):
                     with redirect_stdout(buffer):
                         toast(
                             'Conflict on remote', 
-                            'A folder with the same name already exists in the remote.', 
+                            'A directory with the same name already exists in the remote.', 
                         )
                     captured_output = buffer.getvalue()
                     return
@@ -326,7 +326,7 @@ class LocalRootDirectory(RootDirectory):
             if not local_dir.path_.exists():
                 self.sync_directories = [dir_ for dir_ in self.sync_directories if dir_ != local_dir]
                 remote_root.sync_directories = [remote_dir if dir_.id_ == remote_dir.id_ else dir_ for dir_ in remote_root.sync_directories]
-            # 同期済みフォルダをリモート一覧から削除
+            # 同期済みディレクトリをリモート一覧から削除
             del remote_dir_dict[local_dir.id_]
         # ローカルから同期のなかったリモートをロック
         for remote_dir in remote_dir_dict.values():
@@ -337,7 +337,7 @@ class LocalRootDirectory(RootDirectory):
 
 class RemoteRootDirectory(RootDirectory):
     """
-    リモートフォルダ
+    リモートディレクトリ
     """
 
     def dump(self):

@@ -18,7 +18,7 @@ def watch():
     print('\nRemote:')
     remote.check()
     print('\nSync:')
-    local.sync(remote, 'mirroring')
+    local.sync(remote, 'synchronizing')
     print('Completed')
 
 

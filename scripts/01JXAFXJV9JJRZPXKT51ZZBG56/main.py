@@ -9,16 +9,16 @@ def main(# --- DO NOT DELETE | 削除厳禁: System Reserved ---
     source_dir: SyncDirectory, dest_dir: SyncDirectory, modified_files: list[Path], removed_files: list[Path], 
     # --- END ---
 ):
-    """同期対象フォルダ、ファイルの情報を出力するだけのスクリプトです。
+    """同期対象ディレクトリ、ファイルの情報を出力するだけのスクリプトです。
 
     Parameters
     ----------
     <hide>
     # System-reserved
     source_dir : SyncDirectory
-        同期を実行する際に同期元となるフォルダ。
+        同期を実行する際に同期元となるディレクトリ。
     dest_dir : SyncDirectory
-        同期を実行する際に同期先となるフォルダ。
+        同期を実行する際に同期先となるディレクトリ。
     modified_files : list[Path]
         同期を実行する際に変更または追加されるファイルのリスト。
     removed_files : list[Path]
@@ -53,6 +53,6 @@ if __name__ == '__main__':
     id_ = Path(__file__).resolve().parent.name
     print(f'ID: {id_}')
     debugger = ScriptDebugger(script_id=id_)
-    print(f'--- Sync debug folder ---')
+    print(f'--- Sync debug directory ---')
     kwargs=dict()
     debugger.run(**kwargs)
