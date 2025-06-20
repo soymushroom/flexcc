@@ -75,6 +75,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#first-steps" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -394,6 +399,8 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
@@ -513,12 +520,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guides/mirroring/" class="md-nav__link">
+      <a href="../../guides/sync-directories/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Mirroring directories
+    Sync directories
     
   </span>
   
@@ -536,12 +543,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guides/manage-volume/" class="md-nav__link">
+      <a href="../../guides/manage-storage/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Managing volume
+    Managing storage
     
   </span>
   
@@ -658,7 +665,7 @@
   
   
   <span class="md-ellipsis">
-    Custom scripts
+    Pre-installed scripts
     
   </span>
   
@@ -739,6 +746,8 @@
   
   
   
+    
+  
   
 </nav>
                   </div>
@@ -757,9 +766,10 @@
   
 
 
-  <h1>First steps</h1>
-
-
+<h1 id="first-steps">First steps</h1>
+<p>アプリケーションが起動すると、タスクトレイにアイコンが追加されます。右クリックでメニューを開き <code>Open Console</code> を選択します。</p>
+<p>規定のWebブラウザでコンソールが開くので、<code>📁Local Directory</code>, <code>☁️Remote Directory</code> の右にある <code>Open</code> ボタンを押して各ディレクトリを指定します。</p>
+<p><code>Apply</code> ボタンを押すと設定が反映され、ローカルディレクトリからリモートディレクトリへの同期が開始されます。</p>
 
 
 
@@ -779,12 +789,6 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
-        
-          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
-  Back to top
-</button>
         
       </main>
       
@@ -814,10 +818,12 @@
     
     
       
-      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.sections", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.sections", "navigation.indexes", "search.suggest", "search.highlight"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../assets/javascripts/bundle.13a4f30d.min.js"></script>
+      
+        <script src="../../js/main.js"></script>
       
     
   </body>

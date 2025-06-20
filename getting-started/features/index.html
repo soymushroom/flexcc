@@ -75,6 +75,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#features" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -417,6 +422,21 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Features
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
@@ -429,6 +449,52 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#one-way-synchronization" class="md-nav__link">
+    <span class="md-ellipsis">
+      One-way synchronization
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#auto-storage-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      Auto storage management
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-scripts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Custom scripts
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -513,12 +579,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guides/mirroring/" class="md-nav__link">
+      <a href="../../guides/sync-directories/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Mirroring directories
+    Sync directories
     
   </span>
   
@@ -536,12 +602,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guides/manage-volume/" class="md-nav__link">
+      <a href="../../guides/manage-storage/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Managing volume
+    Managing storage
     
   </span>
   
@@ -658,7 +724,7 @@
   
   
   <span class="md-ellipsis">
-    Custom scripts
+    Pre-installed scripts
     
   </span>
   
@@ -739,6 +805,43 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#one-way-synchronization" class="md-nav__link">
+    <span class="md-ellipsis">
+      One-way synchronization
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#auto-storage-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      Auto storage management
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-scripts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Custom scripts
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -757,9 +860,13 @@
   
 
 
-  <h1>Features</h1>
-
-
+<h1 id="features">Features</h1>
+<h2 id="one-way-synchronization">One-way synchronization</h2>
+<p>ローカルディレクトリとリモートディレクトリの両方を指定すると、ローカルディレクトリの中にあるファイルはすべてリモートディレクトリにコピーされます。一定時間おきにファイルの追加や変更をチェックし、常に同期が取れた状態を保ちます。</p>
+<h2 id="auto-storage-management">Auto storage management</h2>
+<p>ローカルディレクトリ内の各ディレクトリについて、一定期間内容に変更が加わらなかったものは自動的に削除されます。リモートディレクトリには完全なコピーが保管されているため、いつでもローカルディレクトリで作業を再開できます。</p>
+<h2 id="custom-scripts">Custom scripts</h2>
+<p>リモートディレクトリに同期されるファイルに対して、ユーザーが独自に設定したPythonスクリプトを実行することができます。特定の拡張子をもつファイルのみ別の場所にコピーしたり、画像ファイルを縮小して軽量化したものを別途保存することなどが可能になります。</p>
 
 
 
@@ -779,12 +886,6 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
-        
-          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
-  Back to top
-</button>
         
       </main>
       
@@ -814,10 +915,12 @@
     
     
       
-      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.sections", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.sections", "navigation.indexes", "search.suggest", "search.highlight"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../assets/javascripts/bundle.13a4f30d.min.js"></script>
+      
+        <script src="../../js/main.js"></script>
       
     
   </body>

@@ -14,6 +14,12 @@
   color: #e0e0e0 !important;  /* お好みの明るめカラーに */
 }
 
+/* インラインコード */
+.md-typeset code {
+  background-color: #22312b !important;
+  color: #e0e0e0 !important;
+}
+
 /* ==== ヘッダー・タブの背景色（なじませる）==== */
 .md-header,
 .md-tabs {
@@ -63,4 +69,16 @@ a:hover {
 .md-header,
 .md-tabs {
   background-color: #243c32 !important;
+}
+
+/* 検索結果を明るく */
+.md-search-result__meta, 
+.md-search-result__icon {
+  color: #e0e0e0 !important;  /* currentColor 対応 */
+}
+
+/* 検索結果のSVGアイコンが暗い問題への対応 */
+.md-search__icon,
+.md-search__icon path {
+  fill: #e0e0e0 !important;
 }

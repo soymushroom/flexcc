@@ -75,6 +75,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#installation" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -371,6 +376,8 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
@@ -513,12 +520,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guides/mirroring/" class="md-nav__link">
+      <a href="../../guides/sync-directories/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Mirroring directories
+    Sync directories
     
   </span>
   
@@ -536,12 +543,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guides/manage-volume/" class="md-nav__link">
+      <a href="../../guides/manage-storage/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Managing volume
+    Managing storage
     
   </span>
   
@@ -658,7 +665,7 @@
   
   
   <span class="md-ellipsis">
-    Custom scripts
+    Pre-installed scripts
     
   </span>
   
@@ -739,6 +746,8 @@
   
   
   
+    
+  
   
 </nav>
                   </div>
@@ -757,9 +766,24 @@
   
 
 
-  <h1>Installation</h1>
-
-
+<h1 id="installation">Installation</h1>
+<p>flexcc は Windows 専用アプリケーションです。また、アプリケーションの動作には <code>Python &gt;= 3.13</code> および <code>uv</code> モジュールが必要です。</p>
+<ul>
+<li><a href="https://www.python.org/downloads/">Python</a></li>
+<li><a href="https://github.com/astral-sh/uv/tree/main">uv</a></li>
+</ul>
+<p>Python および uv のセットアップが完了したら、github のメニューから <code>Download ZIP</code> を選択してダウンロードしたファイルを展開するか、CLI上で以下のコマンドを実行します。</p>
+<pre><code class="language-bash">git clone https://github.com/soymushroom/flexcc.git
+</code></pre>
+<p>アプリケーションディレクトリが展開されたら、CLI上でそのディレクトリに移動します。CLIからリポジトリをクローンした場合は、以下のコマンドで移動します。</p>
+<pre><code class="language-bash">cd flexcc
+</code></pre>
+<p>アプリケーションディレクトリに移動したのち、以下のコマンドで動作環境を設定します。</p>
+<pre><code class="language-bash">uv sync
+</code></pre>
+<p>環境設定が完了するのを待ち、以下のコマンドで flexcc を起動します。</p>
+<pre><code class="language-bash">uv run app.py
+</code></pre>
 
 
 
@@ -779,12 +803,6 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
-        
-          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
-  Back to top
-</button>
         
       </main>
       
@@ -814,10 +832,12 @@
     
     
       
-      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.sections", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.sections", "navigation.indexes", "search.suggest", "search.highlight"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../assets/javascripts/bundle.13a4f30d.min.js"></script>
+      
+        <script src="../../js/main.js"></script>
       
     
   </body>
