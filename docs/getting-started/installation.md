@@ -1,30 +1,56 @@
 # Installation
 
-flexcc は Windows 専用アプリケーションです。また、アプリケーションの動作には `Python >= 3.13` および `uv` モジュールが必要です。
+!!! warning ""
+
+    flexcc は Windows 専用アプリケーションです。
+
+## Setup environment
+
+flexcc の動作には `Python >= 3.13` および `uv` モジュールが必要です。以下のページを参考にインストールを実施してください。
 
 - [Python](https://www.python.org/downloads/)
-- [uv](https://github.com/astral-sh/uv/tree/main)
+- [uv](https://docs.astral.sh/uv/)
 
-Python および uv のセットアップが完了したら、github のメニューから `Download ZIP` を選択してダウンロードしたファイルを展開するか、CLI上で以下のコマンドを実行します。
+## Install app
 
-```bash
-git clone https://github.com/soymushroom/flexcc.git
-```
+Python および uv のセットアップが完了したら flexcc のインストールおよびセットアップを実施します。簡単操作の [GUI](#__tabbed_1_1) と、扱い慣れた方向けの [CLI](#__tabbed_1_2) によるインストールをサポートしています。
 
-アプリケーションディレクトリが展開されたら、CLI上でそのディレクトリに移動します。CLIからリポジトリをクローンした場合は、以下のコマンドで移動します。
+=== "GUI"
 
-```bash
-cd flexcc
-```
+    [こちら](https://github.com/soymushroom/flexcc/releases) から一番上のバージョンを選択して `Assets` > `Source code (zip)` をクリックします。
 
-アプリケーションディレクトリに移動したのち、以下のコマンドで動作環境を設定します。
+    ![Download ZIP](image.png)
 
-```bash
-uv sync
-```
+    ダウンロードが完了したら、ZIP ファイルを展開してフォルダを開きます。
 
-環境設定が完了するのを待ち、以下のコマンドで flexcc を起動します。
+    ![Unzip](image-1.png)
 
-```bash
-uv run app.py
-```
+    フォルダの中にある `run.bat` をダブルクリックしてアプリを実行します。
+
+    ![Run batch file](image-2.png)
+
+=== "CLI"
+
+    リポジトリをクローンします。
+
+    ```bash
+    git clone https://github.com/soymushroom/flexcc.git
+    ```
+
+    リポジトリ内に移動します。
+
+    ```bash
+    cd flexcc
+    ```
+
+    動作環境を設定します。
+
+    ```bash
+    uv sync
+    ```
+
+    flexcc を起動します。
+
+    ```bash
+    uv run app.py
+    ```

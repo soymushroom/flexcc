@@ -17,6 +17,15 @@ theme:
     - search.highlight
   custom_dir: docs/overrides
 
+markdown_extensions:
+- admonition
+- pymdownx.details
+- pymdownx.superfences
+- pymdownx.magiclink
+- attr_list
+- pymdownx.tabbed:
+    alternate_style: true
+
 plugins:
   - search
   
@@ -39,6 +48,7 @@ nav:
     - Sync directories: guides/sync-directories.md
     - Managing storage: guides/manage-storage.md
     - Running scripts: guides/run-scripts.md
+    - Dev scripts: guides/dev-scripts.md
   - Reference: 
     - reference/index.md
     - Pre-installed scripts: reference/custom-scripts.md

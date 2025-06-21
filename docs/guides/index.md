@@ -5,3 +5,4 @@
 * [ローカルディレクトリをリモートに同期する](./sync-directories.md)
 * [ストレージ容量を管理する](./manage-storage.md)
 * [カスタムスクリプトを実行する](./run-scripts.md)
+* [カスタムスクリプトを開発する](./dev-scripts.md)

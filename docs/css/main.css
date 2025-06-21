@@ -82,3 +82,8 @@ a:hover {
 .md-search__icon path {
   fill: #e0e0e0 !important;
 }
+
+/* 未選択タブの文字色 */
+.tabbed-labels label:not(.tabbed-label--active) a {
+  color: #e0e0e0 !important; /* 好みの色に変更してください */
+}

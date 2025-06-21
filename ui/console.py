@@ -428,7 +428,7 @@ def create_gradio_ui():
             gr_btn_save_scripts: gr.Button = gr.Button("Save Scripts", elem_id="button-apply")
 
             # スクリプト作成
-            gr.Markdown("## Create New Scripts")
+            gr.Markdown("## Create New Script")
             with gr.Row(equal_height=True):
                 gr_tb_script_name: gr.Textbox = gr.Textbox("New Script", show_label=False, interactive=True, scale=2)
                 gr_btn_create_script: gr.Button = gr.Button("🥪 Create!")
