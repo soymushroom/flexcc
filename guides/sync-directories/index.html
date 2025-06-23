@@ -19,12 +19,10 @@
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
     
     
-  <title>
+      
+        <title>Sync directories - flexcc</title>
+      
     
-      Sync directories | flexcc
-    
-  </title>
-
     
       <link rel="stylesheet" href="../../assets/stylesheets/main.342714a4.min.css">
       
@@ -74,6 +72,11 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
+      
+        
+        <a href="#sync-directories" class="md-skip">
+          Skip to content
+        </a>
       
     </div>
     <div data-md-component="announce">
@@ -453,6 +456,8 @@
       
         
       
+        
+      
     
     
     
@@ -511,6 +516,8 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
@@ -565,6 +572,29 @@
   
   <span class="md-ellipsis">
     Running scripts
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dev-scripts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Dev scripts
     
   </span>
   
@@ -739,6 +769,8 @@
   
   
   
+    
+  
   
 </nav>
                   </div>
@@ -757,9 +789,19 @@
   
 
 
-  <h1>Sync directories</h1>
-
-
+<h1 id="sync-directories">Sync directories</h1>
+<p>flexcc の起動中は一定時間ごとに同期が実行されますが、コンソール上部のボタンをクリックすることで即座に同期を開始することができます。</p>
+<p><img alt="alt text" src="../image.png" /></p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>ローカルディレクトリからリモートディレクトリへの同期には <strong>ファイルの削除も含まれます。</strong> バックアップしておきたいファイルは必ずローカルディレクトリに残しておいてください。</p>
+<p>リモートディレクトリを残したままローカルディレクトリを削除する方法については、<a href="../manage-storage/">次のページ</a> を参照してください。</p>
+</div>
+<p>コンソール左側の設定画面から、<code>Sync Every</code> の値を変更することで、定期的に同期を実行する間隔を変更することができます。</p>
+<p><img alt="alt text" src="../image-1.png" /></p>
+<p>設定が完了したら <code>Apply</code> ボタンをクリックして変更を確定します。設定が正常に保存された場合はダイアログが表示されます。</p>
+<p><img alt="alt text" src="../image-15.png" /></p>
+<p><img alt="alt text" src="../image-2.png" /></p>
 
 
 
@@ -808,7 +850,7 @@
     
     
       
-      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.sections", "navigation.indexes", "search.suggest", "search.highlight"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.sections", "navigation.indexes", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../assets/javascripts/bundle.13a4f30d.min.js"></script>

@@ -19,12 +19,10 @@
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
     
     
-  <title>
+      
+        <title>Installation - flexcc</title>
+      
     
-      Installation | flexcc
-    
-  </title>
-
     
       <link rel="stylesheet" href="../../assets/stylesheets/main.342714a4.min.css">
       
@@ -379,6 +377,19 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Installation
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -390,6 +401,43 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#setup-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setup environment
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      Install app
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -460,6 +508,8 @@
       
         
           
+        
+      
         
       
         
@@ -572,6 +622,29 @@
   
   <span class="md-ellipsis">
     Running scripts
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/dev-scripts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Dev scripts
     
   </span>
   
@@ -749,6 +822,32 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#setup-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setup environment
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      Install app
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -767,23 +866,43 @@
 
 
 <h1 id="installation">Installation</h1>
-<p>flexcc は Windows 専用アプリケーションです。また、アプリケーションの動作には <code>Python &gt;= 3.13</code> および <code>uv</code> モジュールが必要です。</p>
+<div class="admonition warning">
+<p>flexcc は Windows 専用アプリケーションです。</p>
+</div>
+<h2 id="setup-environment">Setup environment</h2>
+<p>flexcc の動作には <code>Python &gt;= 3.13</code> および <code>uv</code> モジュールが必要です。以下のページを参考にインストールを実施してください。</p>
 <ul>
 <li><a href="https://www.python.org/downloads/">Python</a></li>
-<li><a href="https://github.com/astral-sh/uv/tree/main">uv</a></li>
+<li><a href="https://docs.astral.sh/uv/">uv</a></li>
 </ul>
-<p>Python および uv のセットアップが完了したら、github のメニューから <code>Download ZIP</code> を選択してダウンロードしたファイルを展開するか、CLI上で以下のコマンドを実行します。</p>
-<pre><code class="language-bash">git clone https://github.com/soymushroom/flexcc.git
-</code></pre>
-<p>アプリケーションディレクトリが展開されたら、CLI上でそのディレクトリに移動します。CLIからリポジトリをクローンした場合は、以下のコマンドで移動します。</p>
-<pre><code class="language-bash">cd flexcc
-</code></pre>
-<p>アプリケーションディレクトリに移動したのち、以下のコマンドで動作環境を設定します。</p>
-<pre><code class="language-bash">uv sync
-</code></pre>
-<p>環境設定が完了するのを待ち、以下のコマンドで flexcc を起動します。</p>
-<pre><code class="language-bash">uv run app.py
-</code></pre>
+<h2 id="install-app">Install app</h2>
+<p>Python および uv のセットアップが完了したら flexcc のインストールおよびセットアップを実施します。簡単操作の <a href="#__tabbed_1_1">GUI</a> と、扱い慣れた方向けの <a href="#__tabbed_1_2">CLI</a> によるインストールをサポートしています。</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">GUI</label><label for="__tabbed_1_2">CLI</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p><a href="https://github.com/soymushroom/flexcc/releases">こちら</a> から一番上のバージョンを選択して <code>Assets</code> &gt; <code>Source code (zip)</code> をクリックします。</p>
+<p><img alt="Download ZIP" src="../image.png" /></p>
+<p>ダウンロードが完了したら、ZIP ファイルを展開してディレクトリを開きます。</p>
+<p><img alt="Unzip" src="../image-1.png" /></p>
+<p>ディレクトリの中にある <code>run.bat</code> をダブルクリックしてアプリを実行します。</p>
+<p><img alt="Run batch file" src="../image-2.png" /></p>
+</div>
+<div class="tabbed-block">
+<p>リポジトリをクローンします。</p>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/soymushroom/flexcc.git
+</code></pre></div>
+<p>リポジトリ内に移動します。</p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>flexcc
+</code></pre></div>
+<p>動作環境を設定します。</p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>sync
+</code></pre></div>
+<p>flexcc を起動します。</p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>app.py
+</code></pre></div>
+</div>
+</div>
+</div>
 
 
 
@@ -832,7 +951,7 @@
     
     
       
-      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.sections", "navigation.indexes", "search.suggest", "search.highlight"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.sections", "navigation.indexes", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../assets/javascripts/bundle.13a4f30d.min.js"></script>

@@ -27,8 +27,44 @@
 }
 
 /* サイドナビ最上部の site_name を非表示 */
+@media screen and (min-width: 60em) {
+  .md-nav__title {
+    display: none !important; /* PC時のみ非表示にする */
+  }
+}
+
 .md-nav__title {
-  display: none !important;
+  background-color: #22312b !important;
+  color: #45ffc7;
+}
+
+.md-nav__source {
+  background-color: #695f24 !important;
+}
+.md-nav__source * {
+  color: #fff4b7 !important;
+}
+
+/* ==== サブセクションタイトル（例: Guides）の文字色とアイコン色を明るく ==== */
+.md-nav__title {
+  color: #e0e0e0 !important;               /* 文字色 */
+}
+
+.md-nav__title .md-icon,
+.md-nav__title .md-nav__icon {
+  color: #e0e0e0 !important;               /* アイコン色 */
+  fill: #e0e0e0 !important;                /* SVG対応（アイコンによって必要） */
+}
+
+/* ==== ホバー時に強調（任意） ==== */
+.md-nav__title:hover {
+  color: #45ffc7 !important;              /* ホバー時の文字色 */
+}
+
+.md-nav__title:hover .md-icon,
+.md-nav__title:hover .md-nav__icon {
+  color: #45ffc7 !important;
+  fill: #45ffc7 !important;               /* ホバー時のアイコン色 */
 }
 
 /* ==== ナビゲーションバーの文字サイズ調整 ==== */
@@ -82,3 +118,90 @@ a:hover {
 .md-search__icon path {
   fill: #e0e0e0 !important;
 }
+
+/* 未選択タブの文字色 */
+.tabbed-labels label:not(.tabbed-label--active) a {
+  color: #e0e0e0 !important; /* 好みの色に変更してください */
+}
+
+/* コピーボタンの通常時の色（やや控えめなグレー） */
+.md-clipboard,
+.md-clipboard path {
+  color: #808080 !important;
+  transition: color 0.2s ease;
+}
+
+/* ホバー時の色（明るめのグリーン系に変更） */
+.md-clipboard:hover,
+.md-clipboard:hover path {
+  color: #a8e6cf !important; /* 例：あなたのテーマに合わせたペールグリーン */
+}
+
+.md-dialog {
+  color: #a8e6cf !important;
+  background: #22312b !important;
+}
+.md-dialog * {
+  color: #a8e6cf !important;
+}
+
+/* ==== Pygments シンタックスハイライト対応（ダークテーマ用） ==== */
+
+/* コードブロック全体 */
+.highlight pre,
+.highlight code {
+  background: #1e2b25 !important; /* 背景を明瞭に */
+  color: #e0e0e0 !important;      /* デフォルト文字色 */
+  border-radius: 6px;
+}
+
+/* コメント */
+.highlight .c1,
+.highlight .c {
+  color: #8f9d6a !important;
+  font-style: italic;
+}
+
+/* キーワード (for, in, etc.) */
+.highlight .k {
+  color: #f92672 !important;
+  font-weight: bold;
+}
+
+/* 変数名など */
+.highlight .n {
+  color: #b8e0db !important;
+}
+
+/* 関数・ビルトイン関数など */
+.highlight .nb,
+.highlight .nf {
+  color: #f0ee98 !important;
+}
+
+/* 演算子（= や + など） */
+.highlight .o {
+  color: #f8f8f2 !important;
+}
+
+/* 数値・リテラル */
+.highlight .mi {
+  color: #ae81ff !important;
+}
+
+/* 文字列 */
+.highlight .s,
+.highlight .s2 {
+  color: #e2894e !important;
+}
+
+/*  */
+.highlight .p {
+  color: #ffc956 !important;
+}
+
+/*  */
+.highlight .ow {
+  color: #5569db !important;
+}
+

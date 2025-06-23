@@ -19,12 +19,10 @@
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
     
     
-  <title>
+      
+        <title>Managing storage - flexcc</title>
+      
     
-      Managing storage | flexcc
-    
-  </title>
-
     
       <link rel="stylesheet" href="../../assets/stylesheets/main.342714a4.min.css">
       
@@ -74,6 +72,11 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
+      
+        
+        <a href="#managing-storage" class="md-skip">
+          Skip to content
+        </a>
       
     </div>
     <div data-md-component="announce">
@@ -453,6 +456,8 @@
       
         
       
+        
+      
     
     
     
@@ -534,6 +539,21 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Managing storage
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
@@ -546,6 +566,61 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#auto-removing-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      Auto-removing criteria
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#locking-remote-directories" class="md-nav__link">
+    <span class="md-ellipsis">
+      Locking remote directories
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#removing-local-directories" class="md-nav__link">
+    <span class="md-ellipsis">
+      Removing local directories
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#restoring-local-directories" class="md-nav__link">
+    <span class="md-ellipsis">
+      Restoring local directories
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -565,6 +640,29 @@
   
   <span class="md-ellipsis">
     Running scripts
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dev-scripts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Dev scripts
     
   </span>
   
@@ -739,6 +837,52 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#auto-removing-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      Auto-removing criteria
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#locking-remote-directories" class="md-nav__link">
+    <span class="md-ellipsis">
+      Locking remote directories
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#removing-local-directories" class="md-nav__link">
+    <span class="md-ellipsis">
+      Removing local directories
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#restoring-local-directories" class="md-nav__link">
+    <span class="md-ellipsis">
+      Restoring local directories
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -757,9 +901,39 @@
   
 
 
-  <h1>Managing storage</h1>
-
-
+<h1 id="managing-storage">Managing storage</h1>
+<p>flexcc は日常的に利用するストレージが圧迫されないよう、一定期間変更が加わっていないローカルディレクトリを自動的に削除します。</p>
+<h2 id="auto-removing-criteria">Auto-removing criteria</h2>
+<p>削除の条件は2つあり、<strong>ローカルディレクトリが作成されてからの経過日数</strong> と、<strong>最後にローカルディレクトリへ変更が加わってからの経過日数</strong> の両方が基準日数を超えた場合にローカルディレクトリが削除されます。これらの日数は <code>Preferences</code> &gt; <code>General settings</code> から変更可能です。</p>
+<p><img alt="alt text" src="../image-30.png" /></p>
+<h2 id="locking-remote-directories">Locking remote directories</h2>
+<p>ローカルディレクトリが削除される際、リモートディレクトリには <strong>ロック</strong> されます。ロックされたリモートディレクトリは同期が実行されなくなります。</p>
+<p><img alt="alt text" src="../image-31.png" /></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>ローカルディレクトリの削除中に同期が実行され、リモートディレクトリのファイルが削除されてしまうのを防ぐためです。</p>
+</div>
+<h2 id="removing-local-directories">Removing local directories</h2>
+<p>ローカルディレクトリは手動で削除することもできます。コンソールから <code>Lock Remote</code> ボタンをクリックしてリモートディレクトリをロックしてから、<code>Remove Local</code> ディレクトリをクリックします。</p>
+<p><img alt="alt text" src="../image-34.png" /></p>
+<p><img alt="alt text" src="../image-35.png" /></p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>ローカルディレクトリの削除は <strong>必ず</strong> コンソール上で行ってください。リモートディレクトリをロックしないままローカルディレクトリを削除すると、リモートディレクトリが破損する可能性があります。</p>
+</div>
+<h2 id="restoring-local-directories">Restoring local directories</h2>
+<p>flexcc ではリモートディレクトリに長期保管しているデータをすぐに同期状態に戻すことができます。削除されたローカルディレクトリをもう一度利用するには、<code>Download Remote</code> ボタンをクリックしてください。ローカルディレクトリが元の場所にダウンロードされ、再び編集できるようになります。</p>
+<p><img alt="alt text" src="../image-36.png" /></p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>リモートディレクトリのダウンロードは <strong>必ず</strong> コンソール上で行ってください。リモートディレクトリをロックしないままローカルディレクトリにコピーすると、リモートディレクトリが破損する可能性があります。</p>
+</div>
+<p>ダウンロードが完了した後は、忘れずにリモートのロックを解除して同期が実行されるようにしてください。</p>
+<p><img alt="alt text" src="../image-37.png" /></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>リモートディレクトリのロックを解除する前にはローカルディレクトリを参照し、ファイルのダウンロードが正常に完了していることを確認してください。</p>
+</div>
 
 
 
@@ -808,7 +982,7 @@
     
     
       
-      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.sections", "navigation.indexes", "search.suggest", "search.highlight"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.sections", "navigation.indexes", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../assets/javascripts/bundle.13a4f30d.min.js"></script>
