@@ -26,13 +26,6 @@
   background-color: #243c32 !important;
 }
 
-/* サイドナビ最上部の site_name を非表示 */
-@media screen and (min-width: 60em) {
-  .md-nav__title {
-    display: none !important; /* PC時のみ非表示にする */
-  }
-}
-
 .md-nav__title {
   background-color: #22312b !important;
   color: #45ffc7;
