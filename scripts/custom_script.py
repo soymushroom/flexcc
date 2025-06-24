@@ -11,7 +11,7 @@ from typing import Literal, Callable, Type, Any, get_type_hints, get_origin, get
 from itertools import islice
 
 
-# カスタムスクリプト属性クラス
+# スクリプト属性クラス
 class CustomScriptAttributes(BaseModel):
     """
     """
@@ -55,7 +55,7 @@ yaml.add_representer(CustomScriptAttributes, custom_script_attributes_represente
 yaml.add_constructor("!CustomScriptAttributes", custom_script_attributes_constructor)
 
 
-# カスタムスクリプト
+# スクリプト
 class CustomScript(BaseModel):
     """
     """

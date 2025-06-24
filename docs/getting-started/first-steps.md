@@ -1,6 +1,6 @@
 # First steps
 
-フォルダの中にある `run.bat` をダブルクリックしてアプリを実行します。
+ディレクトリの中にある `run.bat` をダブルクリックしてアプリを実行します。
 
 ![Run batch file](image-2.png)
 

@@ -184,7 +184,7 @@ class SyncDirectory(BaseModel):
         modified_files, removed_files = self.check(dst, mode)
         do_rename = dst.path_.stem != self.path_.stem  # リネーム実行要否
         do_sync = (len(modified_files) + len(removed_files)) > 0
-        # カスタムスクリプト実行
+        # スクリプト実行
         with SyncDirectory.lock_:
             SyncDirectory.sync_stats[self.id_] = "script"  # ステータス更新
         if do_rename or do_sync:

@@ -34,7 +34,7 @@ def main(# --- DO NOT DELETE | 削除厳禁: System Reserved ---
 
 
 if __name__ == '__main__':
-    from debug.debug import ScriptDebugger
+    from debug.debugger import ScriptDebugger
     
     print(f'--- Start debug ---')
     id_ = Path(__file__).resolve().parent.name

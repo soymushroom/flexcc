@@ -175,7 +175,7 @@ def create_arg_component(annotation: Any, name, script: CustomScript, default: A
     raise ValueError(f"Unsupported annotation for '{name}': {annotation!r}")
 
 
-# カスタムスクリプトの割り当て
+# スクリプトの割り当て
 def assign_custom_script(name_id_dict: dict[str, str], name: str, idx: int, scripts: list[CustomScript]):
     id_ = name_id_dict[name]
     scripts[idx] = CustomScript.create(id_)
@@ -185,20 +185,20 @@ def assign_custom_script(name_id_dict: dict[str, str], name: str, idx: int, scri
         datetime.now(),
     )
 
-# カスタムスクリプトの追加
+# スクリプトの追加
 def add_custom_script(scripts: list[CustomScript], id_name_dict: dict[str, str]):
     if len(id_name_dict.keys()) == 0:
         return []
     scripts += [CustomScript.create(tuple(id_name_dict.keys())[0])]
     return scripts, len(scripts) - 1, datetime.now()
 
-# カスタムスクリプトの削除
+# スクリプトの削除
 def remove_custom_script(scripts: list[CustomScript], index_: int):
     script: CustomScript = scripts.pop(index_)
     print(f"Script {index_}[ {script.attributes.name} ] was removed.")
     return scripts, datetime.now()
 
-# カスタムスクリプトの保存
+# スクリプトの保存
 def save_custom_scripts(scripts: list[CustomScript], *args: Any):
     custom_script_group.scripts = scripts.copy()
     args_idx = 0
@@ -215,7 +215,7 @@ def save_custom_scripts(scripts: list[CustomScript], *args: Any):
     gr.Info("🧑‍💻 Custom scripts are updated.", title="Scripts Saved", duration=settings.gr_info_duration)
     return manual_sync()
 
-# カスタムスクリプト生成
+# スクリプト生成
 def create_new_script(name: str):
     id_ = str(ulid.ULID())
     shutil.copytree(settings.blank_script_path, settings.scripts_path / id_)
@@ -227,7 +227,7 @@ def create_new_script(name: str):
     choices = tuple(id_name_dict.values())
     return id_name_dict, name_id_dict, gr.update(choices=choices, value=choices[-1]), datetime.now()
 
-# カスタムスクリプトプレビュー
+# スクリプトプレビュー
 def show_script_path(name: str, name_id_dict: dict[str, str]):
     id_ = name_id_dict[name]
     path_text = str((settings.scripts_path / id_).absolute())
@@ -365,7 +365,7 @@ def create_gradio_ui():
             # 設定ボタン
             gr_btn_apply_settings: gr.Button = gr.Button("Apply", elem_id="button-apply")
 
-            # カスタムスクリプト
+            # スクリプト
             gr.Markdown("## Custom Scripts")
             gr_state_scripts = gr.State(None)
             gr_state_refresh_scripts = gr.State(None)

@@ -15,7 +15,7 @@ theme:
     - navigation.indexes 
     - search.suggest
     - search.highlight
-  custom_dir: docs/overrides
+    - content.code.copy
 
 markdown_extensions:
 - admonition
@@ -46,11 +46,11 @@ nav:
   - Guides: 
     - guides/index.md
     - Sync directories: guides/sync-directories.md
-    - Managing storage: guides/manage-storage.md
-    - Running scripts: guides/run-scripts.md
+    - Managing storage: guides/managing-storage.md
+    - Running scripts: guides/running-scripts.md
     - Dev scripts: guides/dev-scripts.md
   - Reference: 
     - reference/index.md
-    - Pre-installed scripts: reference/custom-scripts.md
+    - Pre-installed scripts: reference/pre-installed-scripts.md
     - Platform Support: reference/platform-support.md
     - License: reference/license.md

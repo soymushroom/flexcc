@@ -57,6 +57,7 @@ def main(# --- DO NOT DELETE | 削除厳禁: System Reserved ---
     """
 
     extensions = extensions.lower().replace(" ", "").split(";")
+    extensions = [x for x in extensions if x]
     modified_img_paths = [f for f in modified_files if f.suffix[1:].lower() in extensions]
     removed_img_paths = [f for f in removed_files if f.suffix[1:].lower() in extensions]
     
@@ -147,7 +148,7 @@ def main(# --- DO NOT DELETE | 削除厳禁: System Reserved ---
 
 
 if __name__ == '__main__':
-    from debug.debug import ScriptDebugger
+    from debug.debugger import ScriptDebugger
     
     print(f'--- Start debug ---')
     id_ = Path(__file__).resolve().parent.name
@@ -155,7 +156,7 @@ if __name__ == '__main__':
     debugger = ScriptDebugger(script_id=id_)
     print(f'--- Sync debug directory ---')
     kwargs=dict(
-        export_to=Path(ScriptDebugger.BACKUP_DIR), 
+        export_to=ScriptDebugger.BACKUP_DIR, 
         mode='long_side', 
         value=2048, 
         allow_enlarge=False
