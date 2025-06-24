@@ -9,7 +9,7 @@
       
       
       
-        <link rel="prev" href="../run-scripts/">
+        <link rel="prev" href="../running-scripts/">
       
       
         <link rel="next" href="../../reference/">
@@ -533,7 +533,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../manage-storage/" class="md-nav__link">
+      <a href="../managing-storage/" class="md-nav__link">
         
   
   
@@ -556,7 +556,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../run-scripts/" class="md-nav__link">
+      <a href="../running-scripts/" class="md-nav__link">
         
   
   
@@ -760,7 +760,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/custom-scripts/" class="md-nav__link">
+      <a href="../../reference/pre-installed-scripts/" class="md-nav__link">
         
   
   
@@ -939,7 +939,7 @@
 <p><img alt="alt text" src="../image-20.png" /></p>
 <p>このスクリプトは直接呼出しによる動作をサポートしており、Python Debugger によるデバッグ実行が可能です。</p>
 <h2 id="run-with-debugger">Run with debugger</h2>
-<p>カスタムスクリプトの <code>main.py</code> を直接呼び出した場合は、デバッグ用の同期タスクが実行されます。デバッグディレクトリ <code>debug/origin</code> が <code>debug/result</code> として複製され、以下の構成で同期を開始します。</p>
+<p>スクリプトの <code>main.py</code> を直接呼び出した場合は、デバッグ用の同期タスクが実行されます。デバッグディレクトリ <code>debug/origin</code> が <code>debug/result</code> として複製され、以下の構成で同期を開始します。</p>
 <ul>
 <li>ローカルディレクトリ: <code>debug/result/src</code></li>
 <li>リモートディレクトリ: <code>debug/result/dst</code></li>
@@ -949,7 +949,7 @@
 <p>デバッグディレクトリの詳細な構成については <code>debug/origin</code> の内容を参照してください。</p>
 <p><img alt="alt text" src="../image-29.png" /></p>
 </div>
-<p>flexcc の同期前呼び出しでは <code>main</code> 関数が実行され、デバッグ実行でも同様に処理されます。以下の引数はシステムから自動で取得されます。</p>
+<p>アプリ本体からの呼び出し時、デバッグ実行時ともに <code>main</code> 関数が実行され、以下の引数がシステムから自動で取得されます。</p>
 <ul>
 <li><code>source_dir</code>: 同期元になるディレクトリ（専用クラス、デバッグ時は <code>debug/result/src</code> から生成）</li>
 <li><code>dest_dir</code>: 同期先になるディレクトリ（専用クラス、デバッグ時は <code>debug/result/dst</code> から生成）</li>
@@ -989,11 +989,14 @@
 <p><img alt="alt text" src="../image-27.png" /></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p><code>ScriptDebugger</code> クラスにはデバッグ用のバックアップ先として <code>debug/result/bak</code> が登録されています（型: <code>pathlib.Path</code>）。必要に応じて利用ください。</p>
+<p><code>ScriptDebugger</code> クラスにはデバッグ用のバックアップ先として
+<div class="highlight"><pre><span></span><code><span class="n">ScriptDebugger</span><span class="o">.</span><span class="n">BACKUP_DIR</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">debug</span><span class="o">/</span><span class="n">result</span><span class="o">/</span><span class="n">bak</span><span class="p">)</span>
+</code></pre></div>
+が登録されています。必要に応じて利用ください。</p>
 <p><img alt="alt text" src="../image-28.png" /></p>
 </div>
 <h2 id="edit-description">Edit description</h2>
-<p>関数にdocstringを記入すると、コンソール上でカスタムスクリプトを選択した際の <code>Description</code> 欄に表示されます。</p>
+<p>関数にdocstringを記入すると、コンソール上でスクリプトを選択した際の <code>Description</code> 欄に表示されます。</p>
 <p><img alt="alt text" src="../image-23.png" /></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
