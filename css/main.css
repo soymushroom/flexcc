@@ -27,15 +27,21 @@
 }
 
 .md-nav__title {
-  background-color: #16241c !important;
-  /* background-color: #22312b !important; */
-  color: #808080 !important;               /* 文字色 */
+  /* background-color: #16241c !important; */
+  background-color: #22312b !important;
+  color: #c0c0c0 !important;               /* 文字色 */
+}
+
+@media screen and (min-width: 1220px) { 
+  .md-nav__title {
+    display: none !important;
+  }
 }
 
 .md-nav__title .md-icon,
 .md-nav__title .md-nav__icon {
-  color: #808080 !important;               /* アイコン色 */
-  fill: #808080 !important;                /* SVG対応（アイコンによって必要） */
+  color: #c0c0c0 !important;               /* アイコン色 */
+  fill: #c0c0c0 !important;                /* SVG対応（アイコンによって必要） */
 }
 
 .md-nav__source {
