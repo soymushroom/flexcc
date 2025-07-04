@@ -19,15 +19,15 @@ Python および uv のセットアップが完了したら flexcc のインス�
 
     [こちら](https://github.com/soymushroom/flexcc/releases) から一番上のバージョンを選択して `Assets` > `Source code (zip)` をクリックします。
 
-    ![Download ZIP](image.png)
+    ![Download ZIP](images/download-zip.png)
 
     ダウンロードが完了したら、ZIP ファイルを展開してディレクトリを開きます。
 
-    ![Unzip](image-1.png)
+    ![Unzip](images/unzip.png)
 
     ディレクトリの中にある `run.bat` をダブルクリックしてアプリを実行します。
 
-    ![Run batch file](image-2.png)
+    ![Run batch file](images/run-bat.png)
 
 === "CLI"
 

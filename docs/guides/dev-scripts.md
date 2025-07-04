@@ -6,20 +6,20 @@ flexcc のスクリプト実行では、ユーザーが独自に実装したス�
 
 コンソールのメニューから `Create new script` のテキストボックスにスクリプト名を設定し、`🥪Create!` ボタンをクリックします。
 
-![alt text](image-14.png)
+![alt text](images/create-script-button.png)
 
-![alt text](image-16.png)
+![alt text](images/create-script-info.png)
 
 スクリプトが生成されると `Create new script` 下部の `Script finder` に生成されたスクリプトのパスが表示されます。
 
-![alt text](image-17.png)
+![alt text](images/script-path.png)
 
 表示されたパスには以下のファイルがあります。必要に応じて編集してください。
 
 - `attributes.yaml`: スクリプト名や制作者名、バージョン等の属性が記録されています。
 - `main.py`: スクリプトの本体です。
 
-![alt text](image-18.png)
+![alt text](images/script-path-contents.png)
 
 ## Edit script
 
@@ -27,7 +27,7 @@ flexcc のスクリプト実行では、ユーザーが独自に実装したス�
 
 flexcc のディレクトリを開くと Script finder で確認したスクリプトのパスが追加されているので、そこにある `main.py` を開きます。
 
-![alt text](image-20.png)
+![alt text](images/script-file-location.png)
 
 このスクリプトは直接呼出しによる動作をサポートしており、Python Debugger によるデバッグ実行が可能です。
 
@@ -41,7 +41,7 @@ flexcc のディレクトリを開くと Script finder で確認したスクリ�
 !!! note
     デバッグディレクトリの詳細な構成については `debug/origin` の内容を参照してください。
 
-    ![alt text](image-29.png)
+    ![alt text](images/debug-origin-directory.png)
 
 アプリ本体からの呼び出し時、デバッグ実行時ともに `main` 関数が実行され、以下の引数がシステムから自動で取得されます。
 
@@ -69,7 +69,7 @@ flexcc のディレクトリを開くと Script finder で確認したスクリ�
 
 追加で定義された引数はコンソール上で設定可能なパラメータになります。引数の型に応じて適切なコンポーネントが選択されます。
 
-![alt text](image-21.png)
+![alt text](images/add-parameters.png)
 
 !!! info "対応している型"
 
@@ -83,7 +83,7 @@ flexcc のディレクトリを開くと Script finder で確認したスクリ�
 
 デバッグ実行の際にパラメータを指定したい場合は、`ScriptDebugger.run` の引数として指定してください。
 
-![alt text](image-27.png)
+![alt text](images/debug-kwargs.png)
 
 !!! note
     `ScriptDebugger` クラスにはデバッグ用のバックアップ先として
@@ -92,17 +92,15 @@ flexcc のディレクトリを開くと Script finder で確認したスクリ�
     ```
     が登録されています。必要に応じて利用ください。
 
-    ![alt text](image-28.png)
-
 ## Edit description
 
 関数にdocstringを記入すると、コンソール上でスクリプトを選択した際の `Description` 欄に表示されます。
 
-![alt text](image-23.png)
+![alt text](images/script-docstring.png)
 
 !!! note
     `<hide>`, `</hide>` のタグで囲まれたテキストはコンソール上で非表示になります。
 
-    ![alt text](image-25.png)
+    ![alt text](images/docstring-hide-tag.png)
 
-    ![alt text](image-24.png)
+    ![alt text](images/description-hided.png)

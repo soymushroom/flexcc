@@ -51,6 +51,11 @@ nav:
     - Dev scripts: guides/dev-scripts.md
   - Reference: 
     - reference/index.md
-    - Pre-installed scripts: reference/pre-installed-scripts.md
+    - Pre-installed scripts: 
+      - reference/pre-installed-scripts/index.md
+      - Hello World: reference/pre-installed-scripts/hello-world.md
+      - Print Synced Paths: reference/pre-installed-scripts/print-synced-paths.md
+      - Image Resize & Backup: reference/pre-installed-scripts/image-resize-and-backup.md
+      - Archive Before Removal: reference/pre-installed-scripts/archive-before-removal.md
     - Platform Support: reference/platform-support.md
     - License: reference/license.md

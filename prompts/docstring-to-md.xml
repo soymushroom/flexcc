@@ -1,0 +1,11 @@
+<request>
+    `input` タグに示す docstring を元に Markdown 形式のドキュメントを出力してください。
+    <caution>日本語で出力すること。</caution>
+    <caution>`hide` タグで囲まれた部分を出力に含めないこと。</caution>
+    <caution>Summary, Parametersをそれぞれ **Headline-2** として出力すること。</caution>
+    <caution>Parameters の内容は Name, Type, Required, Description を各カラムとする表形式にすること。</caution>
+    <caution>Parameters の Required カラムは ✅ または空文字列で表現すること。</caution>
+</request>
+<input>
+
+</input>
