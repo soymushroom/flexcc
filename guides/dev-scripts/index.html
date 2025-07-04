@@ -759,9 +759,37 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../../reference/pre-installed-scripts/" class="md-nav__link">
+    
+    
+      
         
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/pre-installed-scripts/" class="md-nav__link ">
+              
   
   
   <span class="md-ellipsis">
@@ -770,7 +798,119 @@
   </span>
   
 
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            Pre-installed scripts
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pre-installed-scripts/hello-world/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Hello World
+    
+  </span>
+  
+
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pre-installed-scripts/print-synced-paths/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Print Synced Paths
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pre-installed-scripts/image-resize-and-backup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Image Resize & Backup
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/pre-installed-scripts/archive-before-removal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Archive Before Removal
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -923,20 +1063,20 @@
 <p>flexcc のスクリプト実行では、ユーザーが独自に実装したスクリプトを呼び出すことも可能です。</p>
 <h2 id="create-script">Create script</h2>
 <p>コンソールのメニューから <code>Create new script</code> のテキストボックスにスクリプト名を設定し、<code>🥪Create!</code> ボタンをクリックします。</p>
-<p><img alt="alt text" src="../image-14.png" /></p>
-<p><img alt="alt text" src="../image-16.png" /></p>
+<p><img alt="alt text" src="../images/create-script-button.png" /></p>
+<p><img alt="alt text" src="../images/create-script-info.png" /></p>
 <p>スクリプトが生成されると <code>Create new script</code> 下部の <code>Script finder</code> に生成されたスクリプトのパスが表示されます。</p>
-<p><img alt="alt text" src="../image-17.png" /></p>
+<p><img alt="alt text" src="../images/script-path.png" /></p>
 <p>表示されたパスには以下のファイルがあります。必要に応じて編集してください。</p>
 <ul>
 <li><code>attributes.yaml</code>: スクリプト名や制作者名、バージョン等の属性が記録されています。</li>
 <li><code>main.py</code>: スクリプトの本体です。</li>
 </ul>
-<p><img alt="alt text" src="../image-18.png" /></p>
+<p><img alt="alt text" src="../images/script-path-contents.png" /></p>
 <h2 id="edit-script">Edit script</h2>
 <p>以下ではコードエディタ <a href="https://code.visualstudio.com/" target="_blank">Visual Studio Code (VSCode)</a> での開発手順について説明します。</p>
 <p>flexcc のディレクトリを開くと Script finder で確認したスクリプトのパスが追加されているので、そこにある <code>main.py</code> を開きます。</p>
-<p><img alt="alt text" src="../image-20.png" /></p>
+<p><img alt="alt text" src="../images/script-file-location.png" /></p>
 <p>このスクリプトは直接呼出しによる動作をサポートしており、Python Debugger によるデバッグ実行が可能です。</p>
 <h2 id="run-with-debugger">Run with debugger</h2>
 <p>スクリプトの <code>main.py</code> を直接呼び出した場合は、デバッグ用の同期タスクが実行されます。デバッグディレクトリ <code>debug/origin</code> が <code>debug/result</code> として複製され、以下の構成で同期を開始します。</p>
@@ -947,7 +1087,7 @@
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>デバッグディレクトリの詳細な構成については <code>debug/origin</code> の内容を参照してください。</p>
-<p><img alt="alt text" src="../image-29.png" /></p>
+<p><img alt="alt text" src="../images/debug-origin-directory.png" /></p>
 </div>
 <p>アプリ本体からの呼び出し時、デバッグ実行時ともに <code>main</code> 関数が実行され、以下の引数がシステムから自動で取得されます。</p>
 <ul>
@@ -972,7 +1112,7 @@
 </div>
 <h2 id="add-parameters">Add parameters</h2>
 <p>追加で定義された引数はコンソール上で設定可能なパラメータになります。引数の型に応じて適切なコンポーネントが選択されます。</p>
-<p><img alt="alt text" src="../image-21.png" /></p>
+<p><img alt="alt text" src="../images/add-parameters.png" /></p>
 <div class="admonition info">
 <p class="admonition-title">対応している型</p>
 <ul>
@@ -986,23 +1126,22 @@
 </ul>
 </div>
 <p>デバッグ実行の際にパラメータを指定したい場合は、<code>ScriptDebugger.run</code> の引数として指定してください。</p>
-<p><img alt="alt text" src="../image-27.png" /></p>
+<p><img alt="alt text" src="../images/debug-kwargs.png" /></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p><code>ScriptDebugger</code> クラスにはデバッグ用のバックアップ先として
 <div class="highlight"><pre><span></span><code><span class="n">ScriptDebugger</span><span class="o">.</span><span class="n">BACKUP_DIR</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">debug</span><span class="o">/</span><span class="n">result</span><span class="o">/</span><span class="n">bak</span><span class="p">)</span>
 </code></pre></div>
 が登録されています。必要に応じて利用ください。</p>
-<p><img alt="alt text" src="../image-28.png" /></p>
 </div>
 <h2 id="edit-description">Edit description</h2>
 <p>関数にdocstringを記入すると、コンソール上でスクリプトを選択した際の <code>Description</code> 欄に表示されます。</p>
-<p><img alt="alt text" src="../image-23.png" /></p>
+<p><img alt="alt text" src="../images/script-docstring.png" /></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p><code>&lt;hide&gt;</code>, <code>&lt;/hide&gt;</code> のタグで囲まれたテキストはコンソール上で非表示になります。</p>
-<p><img alt="alt text" src="../image-25.png" /></p>
-<p><img alt="alt text" src="../image-24.png" /></p>
+<p><img alt="alt text" src="../images/docstring-hide-tag.png" /></p>
+<p><img alt="alt text" src="../images/description-hided.png" /></p>
 </div>
 
 

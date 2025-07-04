@@ -179,13 +179,42 @@ a:hover {
   color: #e2894e !important;
 }
 
-/*  */
+/* その他コード */
 .highlight .p {
   color: #ffc956 !important;
 }
 
-/*  */
+/* その他コード */
 .highlight .ow {
   color: #5569db !important;
 }
 
+/* テーブル全体の枠線を消す */
+.md-typeset__table table {
+  border-collapse: collapse;
+  border: none;
+}
+
+/* 横罫線（行の下）だけを表示 */
+.md-typeset__table th,
+.md-typeset__table td {
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: 1px solid #ccc;
+}
+
+/* 最後の行の下の罫線を消す */
+.md-typeset__table tr:last-child td {
+  border-bottom: none;
+}
+
+/* ヘッダー行の下の罫線もグレーに */
+.md-typeset__table thead tr {
+  border-bottom: 1px solid #ccc;
+}
+
+/* optional: ヘッダー行だけ濃くしたい場合 */
+.md-typeset__table th {
+  border-bottom: 2px solid #bbb;
+}
