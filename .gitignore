@@ -6,11 +6,18 @@ dist/
 wheels/
 *.egg-info
 
-# Virtual environments
+# virtual environments
 .venv
 
-# Cache directory
+# cache directory
 cache/
 
+# Debug
+debug/result/
+
+# built docs
+site
+
 # preference file
-config/preferences.yaml
+config/*
+!config/*.py

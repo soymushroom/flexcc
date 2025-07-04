@@ -1,20 +1,21 @@
 from PIL import Image, ImageDraw
 from pystray import Icon, MenuItem, Menu
 import webbrowser
+from pathlib import Path
 
-from config.settings import preferences
+from config.settings import general_settings
 
 
 # アイコン用画像作成
 def create_icon_image():
-    image = Image.new('RGB', (64, 64), 'white')
-    draw = ImageDraw.Draw(image)
-    draw.rectangle((16, 16, 48, 48), fill='blue')
+    image_path = Path('image') / 'logo.png'
+    image = Image.open(image_path).convert('RGBA')
+    image = image.resize((64, 64), Image.LANCZOS)
     return image
 
 
 # pystrayタスク（同期関数）
-port = preferences.ServerPort
+port = general_settings.server_port
 def create_tray_icon():
     def on_exit(icon, item):
         icon.stop()

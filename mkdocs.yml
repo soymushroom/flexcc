@@ -1,0 +1,61 @@
+site_name: flexcc
+repo_url: https://github.com/soymushroom/flexcc
+repo_name: flexcc
+
+theme:
+  name: material
+  favicon: images/logo.png  # または favicon.png
+  logo: images/logo.png  # カスタムロゴ（任意）
+  palette:
+    - scheme: custom  # ダークテーマベース
+      primary: custom
+      accent: custom
+  features:
+    - navigation.sections
+    - navigation.indexes 
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+markdown_extensions:
+- admonition
+- pymdownx.details
+- pymdownx.superfences
+- pymdownx.magiclink
+- attr_list
+- pymdownx.tabbed:
+    alternate_style: true
+
+plugins:
+  - search
+  
+extra_css:
+  - css/main.css
+
+extra_javascript: 
+  - js/main.js
+
+nav:
+  - Introduction: 
+    - index.md
+  - Getting started: 
+    - getting-started/index.md
+    - Installation: getting-started/installation.md
+    - First steps: getting-started/first-steps.md
+    - Features: getting-started/features.md
+  - Guides: 
+    - guides/index.md
+    - Sync directories: guides/sync-directories.md
+    - Managing storage: guides/managing-storage.md
+    - Running scripts: guides/running-scripts.md
+    - Dev scripts: guides/dev-scripts.md
+  - Reference: 
+    - reference/index.md
+    - Pre-installed scripts: 
+      - reference/pre-installed-scripts/index.md
+      - Hello World: reference/pre-installed-scripts/hello-world.md
+      - Print Synced Paths: reference/pre-installed-scripts/print-synced-paths.md
+      - Image Resize & Backup: reference/pre-installed-scripts/image-resize-and-backup.md
+      - Archive Before Removal: reference/pre-installed-scripts/archive-before-removal.md
+    - Platform Support: reference/platform-support.md
+    - License: reference/license.md
