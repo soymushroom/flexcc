@@ -1,0 +1,220 @@
+/* ==== ベースカラー定義 ==== */
+:root {
+  --md-primary-fg-color: #a8e6cf !important;   /* 柔らかいペールグリーン */
+  --md-accent-fg-color: #dcedc1 !important;    /* アクセントもグリーン系に */
+  --md-default-bg-color: #16241c !important;   /* より緑寄りの深い背景色 */
+  --md-default-fg-color: #e0e0e0 !important;   /* 文字色もややグリーン寄り */
+}
+
+/* ==== 本文の文字色を調整 ==== */
+.md-typeset {
+  color: #e0e0e0 !important;  /* お好みの明るめカラーに */
+}
+.md-typeset h1 {
+  color: #e0e0e0 !important;  /* お好みの明るめカラーに */
+}
+
+/* インラインコード */
+.md-typeset code {
+  background-color: #22312b !important;
+  color: #e0e0e0 !important;
+}
+
+/* ==== ヘッダー・タブの背景色（なじませる）==== */
+.md-header,
+.md-tabs {
+  background-color: #243c32 !important;
+}
+
+.md-nav__title {
+  /* background-color: #16241c !important; */
+  background-color: #22312b !important;
+  color: #c0c0c0 !important;               /* 文字色 */
+}
+
+@media screen and (min-width: 1220px) { 
+  .md-nav__title {
+    display: none !important;
+  }
+}
+
+.md-nav__title .md-icon,
+.md-nav__title .md-nav__icon {
+  color: #c0c0c0 !important;               /* アイコン色 */
+  fill: #c0c0c0 !important;                /* SVG対応（アイコンによって必要） */
+}
+
+.md-nav__source {
+  background-color: #695f24 !important;
+}
+.md-nav__source * {
+  color: #fff4b7 !important;
+}
+
+/* ==== ナビゲーションバーの文字サイズ調整 ==== */
+.md-nav__link {
+  font-size: 0.95rem !important;  /* 通常のナビリンク */
+  color: #e0e0e0 !important;      /* 柔らかい緑系文字色 */
+  transition: color 0.2s;
+}
+
+/* セクション内のマージンを狭くする */
+.md-nav__list {
+  font-size: 0.75rem !important;  /* 通常のナビリンク */
+  padding-left: 1.0rem !important; /* ネスト分の左余白 */
+}
+
+/* ==== サイドナビ: ホバー・現在ページ ==== */
+.md-nav__link:hover,
+.md-nav__link:focus {
+  color: #45ffc7 !important;   /* ソフトなイエローでホバー強調 */
+}
+
+.md-nav__link--active {
+  color: #ffeb80 !important;   /* 現在ページも同様に */
+  font-weight: bold;
+}
+
+/* ==== 通常リンク ==== */
+a,
+.md-typeset a {
+  color: #ffee99;
+}
+
+a:hover {
+  color: #f4e88b;
+}
+
+/* ==== ヘッダー・タブの背景色（なじませる）==== */
+.md-header,
+.md-tabs {
+  background-color: #243c32 !important;
+}
+
+/* 検索結果を明るく */
+.md-search-result__meta, 
+.md-search-result__icon {
+  color: #e0e0e0 !important;  /* currentColor 対応 */
+}
+
+/* 検索結果のSVGアイコンが暗い問題への対応 */
+.md-search__icon,
+.md-search__icon path {
+  fill: #e0e0e0 !important;
+}
+
+/* 未選択タブの文字色 */
+.tabbed-labels label:not(.tabbed-label--active) a {
+  color: #e0e0e0 !important; /* 好みの色に変更してください */
+}
+
+/* コピーボタンの通常時の色（やや控えめなグレー） */
+.md-clipboard,
+.md-clipboard path {
+  color: #808080 !important;
+  transition: color 0.2s ease;
+}
+
+/* ホバー時の色（明るめのグリーン系に変更） */
+.md-clipboard:hover,
+.md-clipboard:hover path {
+  color: #a8e6cf !important; /* 例：あなたのテーマに合わせたペールグリーン */
+}
+
+.md-dialog {
+  color: #a8e6cf !important;
+  background: #22312b !important;
+}
+.md-dialog * {
+  color: #a8e6cf !important;
+}
+
+/* ==== Pygments シンタックスハイライト対応（ダークテーマ用） ==== */
+
+/* コードブロック全体 */
+.highlight pre,
+.highlight code {
+  background: #1e2b25 !important; /* 背景を明瞭に */
+  color: #e0e0e0 !important;      /* デフォルト文字色 */
+  border-radius: 6px;
+}
+
+/* コメント */
+.highlight .c1,
+.highlight .c {
+  color: #8f9d6a !important;
+  font-style: italic;
+}
+
+/* キーワード (for, in, etc.) */
+.highlight .k {
+  color: #f92672 !important;
+  font-weight: bold;
+}
+
+/* 変数名など */
+.highlight .n {
+  color: #b8e0db !important;
+}
+
+/* 関数・ビルトイン関数など */
+.highlight .nb,
+.highlight .nf {
+  color: #f0ee98 !important;
+}
+
+/* 演算子（= や + など） */
+.highlight .o {
+  color: #f8f8f2 !important;
+}
+
+/* 数値・リテラル */
+.highlight .mi {
+  color: #ae81ff !important;
+}
+
+/* 文字列 */
+.highlight .s,
+.highlight .s2 {
+  color: #e2894e !important;
+}
+
+/* その他コード */
+.highlight .p {
+  color: #ffc956 !important;
+}
+
+/* その他コード */
+.highlight .ow {
+  color: #5569db !important;
+}
+
+/* テーブル全体の枠線を消す */
+.md-typeset__table table {
+  border-collapse: collapse;
+  border: none;
+}
+
+/* 横罫線（行の下）だけを表示 */
+.md-typeset__table th,
+.md-typeset__table td {
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: 1px solid #ccc;
+}
+
+/* 最後の行の下の罫線を消す */
+.md-typeset__table tr:last-child td {
+  border-bottom: none;
+}
+
+/* ヘッダー行の下の罫線もグレーに */
+.md-typeset__table thead tr {
+  border-bottom: 1px solid #ccc;
+}
+
+/* optional: ヘッダー行だけ濃くしたい場合 */
+.md-typeset__table th {
+  border-bottom: 2px solid #bbb;
+}

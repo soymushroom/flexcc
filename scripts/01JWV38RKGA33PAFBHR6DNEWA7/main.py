@@ -18,16 +18,16 @@ def main(# --- DO NOT DELETE | 削除厳禁: System Reserved ---
     jpeg_quality: int=92, 
     allow_enlarge: bool=False
 ):
-    """画像ファイルをリサイズして指定したフォルダにバックアップします。
+    """画像ファイルをリサイズして指定したディレクトリにバックアップします。
 
     Parameters
     ----------
     <hide>
     # System-reserved
     source_dir : SyncDirectory
-        同期を実行する際に同期元となるフォルダ。
+        同期を実行する際に同期元となるディレクトリ。
     dest_dir : SyncDirectory
-        同期を実行する際に同期先となるフォルダ。
+        同期を実行する際に同期先となるディレクトリ。
     modified_files : list[Path]
         同期を実行する際に変更または追加されるファイルのリスト。
     removed_files : list[Path]
@@ -35,7 +35,7 @@ def main(# --- DO NOT DELETE | 削除厳禁: System Reserved ---
     # End System-reserved
     </hide>
     export_to : Path
-        リサイズされた画像を保存するフォルダを指定する。
+        リサイズされた画像を保存するディレクトリを指定する。
     extensions : str, optional
         対象とする画像ファイルの拡張子をセミコロン区切りで指定する。
         規定値は 'jpg; jpeg; png; gif; bmp; webp; tiff; tif; heic; heif; '。
@@ -57,6 +57,7 @@ def main(# --- DO NOT DELETE | 削除厳禁: System Reserved ---
     """
 
     extensions = extensions.lower().replace(" ", "").split(";")
+    extensions = [x for x in extensions if x]
     modified_img_paths = [f for f in modified_files if f.suffix[1:].lower() in extensions]
     removed_img_paths = [f for f in removed_files if f.suffix[1:].lower() in extensions]
     
@@ -69,15 +70,15 @@ def main(# --- DO NOT DELETE | 削除厳禁: System Reserved ---
                 output_path = export_to / dest_dir.path_.stem / img_path
                 output_path.unlink(missing_ok=True)
 
-    # ローカルフォルダのリネームに同期
+    # ローカルディレクトリのリネームに同期
     is_source_renamed = dest_dir.path_.stem != source_dir.path_.stem
     old_export_dir = export_to / dest_dir.path_.stem
     if is_source_renamed and old_export_dir.exists():
         new_export_dir = export_to / source_dir.path_.stem
-        print(f'Rename export folder: \n{old_export_dir} \n > {new_export_dir}')
+        print(f'Rename export directory: \n{old_export_dir} \n > {new_export_dir}')
         old_export_dir.rename(new_export_dir)
 
-    # 出力先フォルダを作成（存在しない場合）
+    # 出力先ディレクトリを作成（存在しない場合）
     export_to.mkdir(parents=True, exist_ok=True)
 
     # リサイズ実行
@@ -147,15 +148,15 @@ def main(# --- DO NOT DELETE | 削除厳禁: System Reserved ---
 
 
 if __name__ == '__main__':
-    from debug.debug import ScriptDebugger
+    from debug.debugger import ScriptDebugger
     
     print(f'--- Start debug ---')
     id_ = Path(__file__).resolve().parent.name
     print(f'ID: {id_}')
     debugger = ScriptDebugger(script_id=id_)
-    print(f'--- Sync debug folder ---')
+    print(f'--- Sync debug directory ---')
     kwargs=dict(
-        export_to=Path(ScriptDebugger.BACKUP_DIR), 
+        export_to=ScriptDebugger.BACKUP_DIR, 
         mode='long_side', 
         value=2048, 
         allow_enlarge=False

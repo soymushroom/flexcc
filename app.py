@@ -1,4 +1,5 @@
 import asyncio
+from pathlib import Path
 
 from config import settings
 from config.settings import general_settings
@@ -13,7 +14,11 @@ async def main():
     create_scheduler()
     # GradioのUI起動（非ブロッキング）
     demo = create_gradio_ui()
-    demo.launch(prevent_thread_lock=True, server_port=general_settings.server_port)
+    demo.launch(
+        prevent_thread_lock=True, 
+        server_port=general_settings.server_port, 
+        favicon_path=Path('image') / 'logo.png',
+    )
     # スケジューラ起動
     start_scheduler()
     # トレイアイコンを非同期スレッドで実行
